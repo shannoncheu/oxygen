@@ -8,6 +8,7 @@ import {
   isValidElement,
   useId,
   useRef,
+  useState,
   type ReactNode,
   type ReactElement,
 } from 'react';
@@ -75,9 +76,11 @@ export function Logo({
   color?: string;
   size?: number;
 }) {
+  const [failedLogo, setFailedLogo] = useState('');
   return (
     <span
       className="service-logo"
+      aria-hidden="true"
       style={{
         width: size,
         height: size,
@@ -85,16 +88,13 @@ export function Logo({
         color: color || 'var(--accent)',
       }}
     >
-      {logo ? (
+      {logo && logo !== failedLogo ? (
         <img
           src={logo}
           alt=""
           width={size * 0.57}
           height={size * 0.57}
-          onError={(e) => {
-            e.currentTarget.style.display = 'none';
-            e.currentTarget.parentElement!.dataset.fallback = name.slice(0, 2);
-          }}
+          onError={() => setFailedLogo(logo)}
         />
       ) : (
         <span>{name.slice(0, 2).toUpperCase()}</span>

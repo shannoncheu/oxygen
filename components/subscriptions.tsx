@@ -463,10 +463,14 @@ export function SubscriptionEditor({
     [busy, setBusy] = useState(false),
     [error, setError] = useState(''),
     [picked, setPicked] = useState(!!subscription),
+    [uploading, setUploading] = useState(false),
+    [logoError, setLogoError] = useState(''),
     [logoBusy, setLogoBusy] = useState(false),
     [logoMessage, setLogoMessage] = useState('');
   const matches = searchServices(term);
   const logoRequest = useRef<AbortController | null>(null);
+  const logoInput = useRef<HTMLInputElement>(null);
+  const manualLogo = useRef(false);
   useEffect(() => () => logoRequest.current?.abort(), []);
   function cancelLogoLookup() {
     logoRequest.current?.abort();
@@ -476,6 +480,8 @@ export function SubscriptionEditor({
   }
   function pickService(c: ServiceDefinition) {
     cancelLogoLookup();
+    manualLogo.current = false;
+    setLogoError('');
     setS((old: any) => ({
       ...old,
       name: c.name,
@@ -493,6 +499,7 @@ export function SubscriptionEditor({
     const request = new AbortController();
     logoRequest.current = request;
     setLogoBusy(true);
+    setLogoError('');
     setLogoMessage('');
     try {
       const result = await discoverService(query.trim(), request.signal);
@@ -519,6 +526,7 @@ export function SubscriptionEditor({
   }
   async function submit(e: React.FormEvent) {
     e.preventDefault();
+    if (busy || logoBusy) return;
     setBusy(true);
     setError('');
     try {
@@ -532,10 +540,20 @@ export function SubscriptionEditor({
     }
   }
   async function upload(file?: File) {
-    if (!file) return;
+    if (!file || busy) return;
     cancelLogoLookup();
+    setLogoError('');
+    if (file.size === 0 || file.size > 2 * 1024 * 1024) {
+      setLogoError('请选择 2 MB 以内的图片。');
+      return;
+    }
+    if (!['image/png', 'image/jpeg', 'image/webp'].includes(file.type)) {
+      setLogoError('支持 PNG、JPEG 和 WebP 图片。');
+      return;
+    }
+    manualLogo.current = true;
+    setUploading(true);
     setBusy(true);
-    setError('');
     try {
       const f = new FormData();
       f.append('file', file);
@@ -545,12 +563,14 @@ export function SubscriptionEditor({
         body: f,
       });
       const j = await r.json();
-      if (!r.ok) throw Error(j.error);
+      if (!r.ok) throw Error(j.error || 'Logo 上传失败，请重试。');
       set('logo', j.url);
+      setLogoMessage('Logo 已上传，保存订阅后生效。');
     } catch (e) {
-      setError((e as Error).message);
+      setLogoError((e as Error).message);
     } finally {
       setBusy(false);
+      setUploading(false);
     }
   }
   return (
@@ -609,6 +629,7 @@ export function SubscriptionEditor({
               <button
                 type="button"
                 className="text-button"
+                disabled={busy}
                 onClick={() => {
                   cancelLogoLookup();
                   setPicked(false);
@@ -616,6 +637,68 @@ export function SubscriptionEditor({
               >
                 更换
               </button>
+            )}
+          </div>
+          <div className="subscription-logo-upload">
+            <input
+              ref={logoInput}
+              type="file"
+              hidden
+              accept="image/png,image/jpeg,image/webp"
+              aria-label="上传订阅 Logo"
+              disabled={busy}
+              onChange={(e) => {
+                const file = e.target.files?.[0];
+                e.target.value = '';
+                void upload(file);
+              }}
+            />
+            <div className="subscription-logo-actions">
+              <button
+                type="button"
+                className="button logo-upload-button"
+                disabled={busy}
+                onClick={() => logoInput.current?.click()}
+              >
+                <Upload size={16} />
+                {uploading ? '正在上传…' : '上传 Logo'}
+              </button>
+              <button
+                type="button"
+                className="button"
+                disabled={busy || logoBusy || (!s.website && !s.name)}
+                onClick={() => findLogo(s.website || s.name)}
+              >
+                {logoBusy ? '正在获取…' : '自动获取图标'}
+              </button>
+              {s.logo && (
+                <button
+                  type="button"
+                  className="text-button"
+                  disabled={busy}
+                  onClick={() => {
+                    manualLogo.current = true;
+                    set('logo', '');
+                    setLogoError('');
+                    setLogoMessage('Logo 已移除，保存订阅后生效。');
+                  }}
+                >
+                  移除 Logo
+                </button>
+              )}
+            </div>
+            <p className="field-hint">
+              PNG / JPG / WebP，最大 2 MB。图片会显示在上方，保存订阅后生效。
+            </p>
+            {logoMessage && (
+              <p className="field-hint" role="status">
+                {logoMessage}
+              </p>
+            )}
+            {logoError && (
+              <p className="form-error" role="alert">
+                {logoError}
+              </p>
             )}
           </div>
           <div className="form-grid">
@@ -626,7 +709,7 @@ export function SubscriptionEditor({
                 value={s.name}
                 onChange={(e) => set('name', e.target.value)}
                 onBlur={() => {
-                  if (!s.logo && !s.website) void findLogo(s.name);
+                  if (!manualLogo.current && !s.logo && !s.website) void findLogo(s.name);
                 }}
               />
             </Field>
@@ -754,39 +837,13 @@ export function SubscriptionEditor({
               value={s.website}
               onChange={(e) => set('website', e.target.value)}
               onBlur={() => {
-                if (s.website && !s.logo) void findLogo(s.website);
+                if (!manualLogo.current && s.website && !s.logo) void findLogo(s.website);
               }}
             />
           </Field>
-          <div className="logo-discovery-controls">
-            <button
-              type="button"
-              className="button"
-              disabled={busy || logoBusy || (!s.website && !s.name)}
-              onClick={() => findLogo(s.website || s.name)}
-            >
-              {logoBusy ? '正在获取图标…' : '自动获取图标'}
-            </button>
-            <span className="field-hint" aria-live="polite">
-              {logoMessage || '填写官网后可自动读取图标，也可以上传自己的图片。'}
-            </span>
-          </div>
-          <div className="form-grid">
-            <Field label="品牌色">
-              <input type="color" value={s.color} onChange={(e) => set('color', e.target.value)} />
-            </Field>
-            <Field label="自定义图标（可选）">
-              <span className="upload-control">
-                <Upload size={16} />
-                <input
-                  type="file"
-                  accept="image/png,image/jpeg,image/webp"
-                  onChange={(e) => upload(e.target.files?.[0])}
-                />
-              </span>
-              <span className="field-hint">PNG / JPG / WebP，最大 2 MB</span>
-            </Field>
-          </div>
+          <Field label="品牌色">
+            <input type="color" value={s.color} onChange={(e) => set('color', e.target.value)} />
+          </Field>
           <Field label="备注">
             <textarea
               maxLength={2000}

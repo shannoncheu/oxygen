@@ -156,13 +156,27 @@
   font-size: 11px;
   overflow-wrap: anywhere;
 }
-.logo-discovery-controls {
+.subscription-logo-upload {
+  display: grid;
+  gap: 10px;
+  margin-top: -4px;
+}
+.subscription-logo-upload > p {
+  margin: 0;
+}
+.subscription-logo-actions {
   display: flex;
   align-items: center;
-  gap: 12px;
+  flex-wrap: wrap;
+  gap: 10px 14px;
 }
-.logo-discovery-controls .button {
+.subscription-logo-actions .button {
   flex-shrink: 0;
+}
+.logo-upload-button {
+  color: var(--accent);
+  background: var(--accent-soft);
+  border-color: transparent;
 }
 @media (max-width: 700px) {
   .stat-primary .currency-total-value {
@@ -180,10 +194,6 @@
   }
   .manual-rate-grid {
     grid-template-columns: 1fr;
-  }
-  .logo-discovery-controls {
-    align-items: flex-start;
-    flex-direction: column;
   }
   .currency-total-value {
     font-size: 25px;
