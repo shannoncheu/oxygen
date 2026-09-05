@@ -1,6 +1,6 @@
 import { unlink } from 'node:fs/promises';
 import { route, json, bodyJSON, APIError } from '@/lib/server/api';
-import { requireAccount, requireUnsafeRequest } from '@/lib/server/auth';
+import { requireAccount, requireUnsafeRequest, lockActiveAccount } from '@/lib/server/auth';
 import { validateBackup } from '@/lib/server/backup';
 import { transaction, readBusiness, writeBusiness } from '@/lib/server/db';
 import { saveUpload, imagePath } from '@/lib/server/uploads';
@@ -25,12 +25,8 @@ export const POST = route(async (request) => {
   const written: string[] = [];
   try {
     const data = await transaction(async (tx) => {
-      const existing = await readBusiness(tx, account.id, true);
-      const liveSession = await tx.query(
-        'SELECT id FROM sessions WHERE id=$1 AND owner_id=$2 AND expires_at>now()',
-        [account.sessionId, account.id],
-      );
-      if (!liveSession.rows.length) throw new APIError(401, '会话已失效，请重新登录。');
+      await lockActiveAccount(tx, account);
+      const existing = await readBusiness(tx, account.id);
       if (!Number.isSafeInteger(body.revision) || body.revision !== existing.revision)
         throw new APIError(409, '数据已更新，请刷新并重新预览备份。');
       const replacements = new Map<string, string>();

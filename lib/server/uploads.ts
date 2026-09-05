@@ -3,7 +3,8 @@ import { randomUUID } from 'node:crypto';
 import { mkdir, writeFile, readFile, unlink } from 'node:fs/promises';
 import path from 'node:path';
 import { APIError } from './errors';
-import { query, type SQLExecutor } from './db';
+import { query, transaction, type SQLExecutor } from './db';
+import { lockActiveAccount, type Account } from './auth';
 import type { BusinessData } from '../model';
 
 export const MAX_IMAGE_BYTES = 2 * 1024 * 1024;
@@ -80,6 +81,23 @@ export async function saveUpload(ownerId: string, png: Buffer, executor?: SQLExe
     throw uploadError(error, 'database');
   }
   return { id, url: '/api/files/' + id, filename };
+}
+
+/** Recheck the session after slow decoding/network work and serialize with account management. */
+export async function saveAuthenticatedUpload(account: Account, png: Buffer) {
+  let filename: string | undefined;
+  try {
+    return await transaction(async (tx) => {
+      await lockActiveAccount(tx, account);
+      const saved = await saveUpload(account.id, png, tx);
+      filename = saved.filename;
+      return saved;
+    });
+  } catch (error) {
+    // saveUpload handles insertion failures; this also handles rollback/commit failure afterwards.
+    if (filename) await unlink(imagePath(filename)).catch(() => {});
+    throw error;
+  }
 }
 
 function uploadError(error: unknown, stage: 'storage' | 'database'): APIError {

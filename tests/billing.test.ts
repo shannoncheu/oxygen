@@ -109,6 +109,27 @@ test('money uses exact integer minor units and currency precision', () => {
   assert.throws(() => parseMoney('1000000000000000000000000', 'CNY'));
   assert.match(formatMoney(1007, 'KWD', 'en-US'), /1\.007/);
 });
+
+test('NGN and TRY preserve two-decimal prices through billing and backup validation', () => {
+  const data = emptyData();
+  for (const currency of ['NGN', 'TRY'] as const) {
+    assert.equal(parseMoney('1234.56', currency), 123456);
+    assert.equal(parseMoney('0.01', currency), 1);
+    assert.throws(() => parseMoney('0.001', currency));
+    assert.match(formatMoney(123456, currency, 'en-US'), /1,234\.56/);
+    save(data, subscription({ currency, amountMinor: parseMoney('1234.56', currency) }));
+  }
+  materialize(data, '2026-01-31');
+  assert.deepEqual(summarizeByCurrency(projectBills(data, '2026-01-01', '2026-01-31')), {
+    NGN: 123456,
+    TRY: 123456,
+  });
+  for (const displayCurrency of ['NGN', 'TRY'] as const) {
+    applyAction(data, { type: 'settings.save', payload: { displayCurrency } }, '2026-01-31');
+    assert.equal(data.settings.displayCurrency, displayCurrency);
+    assert.deepEqual(validateData(JSON.parse(JSON.stringify(data)), '2026-01-31'), data);
+  }
+});
 test('trial end is first paid date and becomes an independent cycle anchor', () => {
   const s = subscription({
     anchorDate: '2026-01-01',

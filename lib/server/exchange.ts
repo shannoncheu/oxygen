@@ -69,46 +69,50 @@ export async function fetchProviderRates(
   return parseProviderRates(JSON.parse(Buffer.concat(parts).toString('utf8')), now);
 }
 
-/** Persisted account snapshots seed this shared process cache after a server restart. */
+/** Only fixed-provider responses enter the shared cache; saved snapshots stay account-local. */
 export function createExchangeCache(fetcher: typeof fetch = fetch, clock: () => number = Date.now) {
   let cached: ExchangeSnapshot | null = null;
   let retryAt = 0;
-  let lastError = '';
-  let pending: Promise<ExchangeResponse> | null = null;
+  let failed = false;
+  let pending: Promise<void> | null = null;
   return async (saved: ExchangeSnapshot | null = null): Promise<ExchangeResponse> => {
     const now = clock();
-    if (saved && (!cached || saved.updatedAt > cached.updatedAt)) cached = saved;
     if (cached && !isSnapshotStale(cached, now)) return { snapshot: cached, stale: false };
-    if (pending) return pending;
-    if (now < retryAt)
-      return {
-        snapshot: cached,
-        stale: isSnapshotStale(cached, now),
-        error: lastError || undefined,
-      };
-    pending = (async () => {
-      try {
-        const next = await fetchProviderRates(fetcher, now);
-        if (!cached || next.updatedAt >= cached.updatedAt) cached = next;
-        retryAt = Math.max(now + RETRY_AFTER, Date.parse(next.nextUpdateAt));
-        lastError = '';
-      } catch {
-        retryAt = now + RETRY_AFTER;
-        lastError = cached
-          ? '汇率更新失败，继续使用上次汇率。也可以手动填写。'
-          : '暂时无法获取汇率，请稍后重试或手动填写。';
-      }
-      return {
-        snapshot: cached,
-        stale: isSnapshotStale(cached, clock()),
-        error: lastError || undefined,
-      };
-    })();
-    try {
-      return await pending;
-    } finally {
-      pending = null;
+    // Imports and settings actions can contain user-supplied snapshots. Reuse a
+    // fresh saved snapshot for this account without making it another account's rate source.
+    if (saved && !isSnapshotStale(saved, now)) return { snapshot: saved, stale: false };
+    if (!pending && now >= retryAt) {
+      pending = (async () => {
+        try {
+          const next = await fetchProviderRates(fetcher, now);
+          if (!cached || next.updatedAt >= cached.updatedAt) cached = next;
+          retryAt = Math.max(now + RETRY_AFTER, Date.parse(next.nextUpdateAt));
+          failed = false;
+        } catch {
+          retryAt = now + RETRY_AFTER;
+          failed = true;
+        }
+      })();
     }
+    if (pending) {
+      const refresh = pending;
+      try {
+        await refresh;
+      } finally {
+        if (pending === refresh) pending = null;
+      }
+    }
+    // Concurrent callers share the network request, never another account's fallback.
+    const snapshot = cached && (!saved || cached.updatedAt >= saved.updatedAt) ? cached : saved;
+    return {
+      snapshot,
+      stale: isSnapshotStale(snapshot, clock()),
+      error: failed
+        ? snapshot
+          ? '汇率更新失败，继续使用上次汇率。也可以手动填写。'
+          : '暂时无法获取汇率，请稍后重试或手动填写。'
+        : undefined,
+    };
   };
 }
 const state = globalThis as typeof globalThis & {

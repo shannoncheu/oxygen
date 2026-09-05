@@ -3,7 +3,6 @@ CREATE TABLE IF NOT EXISTS accounts (
  password_hash text NOT NULL, revision integer NOT NULL DEFAULT 0,
  settings jsonb NOT NULL, created_at timestamptz NOT NULL DEFAULT now()
 );
-CREATE UNIQUE INDEX IF NOT EXISTS accounts_single_administrator ON accounts ((true));
 CREATE TABLE IF NOT EXISTS sessions (
  id text PRIMARY KEY, owner_id text NOT NULL REFERENCES accounts(id) ON DELETE CASCADE,
  token_hash text NOT NULL UNIQUE, expires_at timestamptz NOT NULL,

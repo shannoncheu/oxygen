@@ -7,5 +7,5 @@ export const POST = route(async (request) => {
   requireUnsafeRequest(request);
   const account = await requireAccount(request);
   const body = await bodyJSON(request, 4096);
-  return json(await discoverService(body.query, account.id));
+  return json(await discoverService(body.query, account));
 });

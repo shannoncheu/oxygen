@@ -3,10 +3,11 @@ import { drizzle as postgresDrizzle } from 'drizzle-orm/node-postgres';
 import { drizzle as pgliteDrizzle } from 'drizzle-orm/pglite';
 import { sql as drizzleSQL, type SQL } from 'drizzle-orm';
 import { PGlite } from '@electric-sql/pglite';
-import { readFile, mkdir } from 'node:fs/promises';
+import { mkdir } from 'node:fs/promises';
 import path from 'node:path';
 import * as schema from './schema';
 import type { BusinessData } from '../model';
+import { applyMigrations } from './migrations';
 
 export interface SQLExecutor {
   query<T = Record<string, any>>(sql: string, parameters?: unknown[]): Promise<{ rows: T[] }>;
@@ -33,7 +34,6 @@ export function statement(text: string, parameters: unknown[] = []): SQL {
 }
 const globalDb = globalThis as typeof globalThis & { __subscriboDatabase?: Promise<Database> };
 async function connect(): Promise<Database> {
-  const migration = await readFile(path.join(process.cwd(), 'migrations/0001_init.sql'), 'utf8');
   if (process.env.DATABASE_URL) {
     const pool = new Pool({
       connectionString: process.env.DATABASE_URL,
@@ -45,7 +45,7 @@ async function connect(): Promise<Database> {
     try {
       await client.query('BEGIN');
       await client.query('SELECT pg_advisory_xact_lock(71182411)');
-      await client.query(migration);
+      await applyMigrations(client, (sql) => client.query(sql));
       await client.query('COMMIT');
     } catch (error) {
       await client.query('ROLLBACK');
@@ -86,7 +86,9 @@ async function connect(): Promise<Database> {
   const location = process.env.PGLITE_DATA_DIR || path.join(process.cwd(), '.data', 'pglite');
   if (location !== ':memory:') await mkdir(location, { recursive: true });
   const pg = new PGlite(location === ':memory:' ? undefined : location);
-  await pg.exec(migration);
+  await pg.transaction(async (tx) => {
+    await applyMigrations(tx, (sql) => tx.exec(sql));
+  });
   const orm = pgliteDrizzle(pg, { schema });
   return {
     orm,

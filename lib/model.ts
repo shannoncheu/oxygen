@@ -1,6 +1,7 @@
 import type { ExchangeSettings } from './exchange';
 
-export type Currency = 'CNY' | 'USD' | 'EUR' | 'GBP' | 'HKD' | 'TWD' | 'JPY' | 'KRW' | 'KWD';
+export type Currency =
+  'CNY' | 'USD' | 'EUR' | 'GBP' | 'HKD' | 'TWD' | 'JPY' | 'KRW' | 'KWD' | 'NGN' | 'TRY';
 export type CycleUnit = 'day' | 'week' | 'month' | 'year';
 export type SubscriptionStatus = 'active' | 'trial' | 'paused' | 'cancelled' | 'archived';
 export interface Subscription {

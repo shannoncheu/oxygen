@@ -1,5 +1,6 @@
 import type { Metadata } from 'next';
 import './globals.css';
+import './accounts.css';
 export const metadata: Metadata = {
   title: 'Oxygen',
   robots: { index: false, follow: false },

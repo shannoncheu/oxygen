@@ -31,6 +31,8 @@ export const currencies: Currency[] = [
   'JPY',
   'KRW',
   'KWD',
+  'NGN',
+  'TRY',
 ];
 export const statusLabels: Record<string, string> = {
   active: '启用中',

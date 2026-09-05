@@ -10,6 +10,8 @@ export const CURRENCY_DIGITS: Record<Currency, number> = {
   JPY: 0,
   KRW: 0,
   KWD: 3,
+  NGN: 2,
+  TRY: 2,
 };
 export const MAX_MONEY = 1_000_000_000_000;
 const DAY = 86_400_000;

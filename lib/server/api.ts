@@ -1,5 +1,5 @@
 import { NextResponse } from 'next/server';
-import { requireAccount, requireUnsafeRequest } from './auth';
+import { requireAccount, requireUnsafeRequest, lockActiveAccount } from './auth';
 import { transaction, readBusiness, writeBusiness } from './db';
 import type { BusinessData } from '../model';
 import { materialize, validateData } from '../domain';
@@ -82,12 +82,8 @@ export async function business(
   if (change) requireUnsafeRequest(request);
   const account = await requireAccount(request);
   return transaction(async (tx) => {
-    const data = await readBusiness(tx, account.id, true);
-    const session = await tx.query(
-      'SELECT id FROM sessions WHERE id=$1 AND owner_id=$2 AND expires_at>now()',
-      [account.sessionId, account.id],
-    );
-    if (!session.rows.length) throw new APIError(401, '会话已失效，请重新登录。');
+    const current = await lockActiveAccount(tx, account);
+    const data = await readBusiness(tx, account.id);
     if (change && (!Number.isSafeInteger(revision) || revision !== data.revision))
       throw new APIError(409, '数据已在其他设备更新，请刷新后重试。');
     const before = JSON.stringify(data);
@@ -106,6 +102,6 @@ export async function business(
       next.revision = startingRevision + 1;
       await writeBusiness(tx, account.id, next);
     }
-    return { data: next, username: account.username };
+    return { data: next, username: current.username, role: current.role };
   });
 }

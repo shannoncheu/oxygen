@@ -1,7 +1,8 @@
 import sharp from 'sharp';
 import { services, type ServiceDefinition } from '../catalog';
 import { APIError } from './errors';
-import { normalizeImage, saveUpload, MAX_IMAGE_BYTES } from './uploads';
+import { normalizeImage, saveAuthenticatedUpload, MAX_IMAGE_BYTES } from './uploads';
+import type { Account } from './auth';
 import { publicFetch, publicURL } from './safe-public-fetch';
 
 export interface ServiceDiscovery {
@@ -264,7 +265,7 @@ function remoteDefinition(name: string, website: string, logo: string): ServiceD
 
 async function fromWebsite(
   query: string,
-  ownerId: string,
+  account: Account,
   deadline: number,
 ): Promise<ServiceDiscovery> {
   const requested = publicURL(/^https?:\/\//i.test(query) ? query : 'https://' + query);
@@ -293,14 +294,14 @@ async function fromWebsite(
         accept: 'image/*',
       });
       const png = await normalizeRemoteIcon(response.body);
-      const saved = await saveUpload(ownerId, png);
+      const saved = await saveAuthenticatedUpload(account, png);
       return {
         service: remoteDefinition(metadata.name, website, saved.url),
         source: 'website',
         sourceLabel: new URL(website).hostname,
       };
     } catch (error) {
-      if (!(error instanceof APIError)) throw error;
+      if (!(error instanceof APIError) || [401, 403, 503, 507].includes(error.status)) throw error;
     }
   }
   throw failure();
@@ -322,7 +323,7 @@ export function appMatchesQuery(name: string, query: string): boolean {
 }
 async function fromSearch(
   query: string,
-  ownerId: string,
+  account: Account,
   deadline: number,
 ): Promise<ServiceDiscovery> {
   const search = new URL('https://itunes.apple.com/search');
@@ -362,7 +363,7 @@ async function fromSearch(
     deadline,
     accept: 'image/*',
   });
-  const saved = await saveUpload(ownerId, await normalizeRemoteIcon(icon.body));
+  const saved = await saveAuthenticatedUpload(account, await normalizeRemoteIcon(icon.body));
   let website = listing.href;
   if (typeof app.sellerUrl === 'string') {
     try {
@@ -378,13 +379,14 @@ async function fromSearch(
   };
 }
 
-export async function discoverService(query: unknown, ownerId: string): Promise<ServiceDiscovery> {
+export async function discoverService(query: unknown, account: Account): Promise<ServiceDiscovery> {
   if (typeof query !== 'string' || !query.trim() || query.length > 2048)
     throw new APIError(400, '请输入 App 名称或官网地址。');
   query = query.trim();
   const found = matchCatalog(query as string);
   if (found) return { service: found, source: 'catalog', sourceLabel: '内置目录' };
   const now = Date.now();
+  const ownerId = account.id;
   for (const [key, value] of slots) if (now - value.since >= 60000) slots.delete(key);
   const slot = slots.get(ownerId) || { since: now, count: 0 };
   if (slot.count >= 8 || slots.size >= 100 || active >= 2)
@@ -398,8 +400,8 @@ export async function discoverService(query: unknown, ownerId: string): Promise<
     if (!looksLikeURL && value.length > 100)
       throw new APIError(400, 'App 名称不能超过 100 个字符。');
     return looksLikeURL
-      ? await fromWebsite(value, ownerId, now + 18000)
-      : await fromSearch(value, ownerId, now + 18000);
+      ? await fromWebsite(value, account, now + 18000)
+      : await fromSearch(value, account, now + 18000);
   } finally {
     active--;
   }

@@ -26,7 +26,14 @@ const tabs = [
   { id: 'families', label: '家庭组', icon: Users, title: '家庭空间' },
   { id: 'settings', label: '设置', icon: Settings2, title: '偏好设置' },
 ];
-export default function Dashboard({ username }: { username: string }) {
+export default function Dashboard({
+  username: initialUsername,
+  role,
+}: {
+  username: string;
+  role: 'admin' | 'member';
+}) {
+  const [username, setUsername] = useState(initialUsername);
   const [data, setData] = useState<BusinessData | null>(null),
     [tab, setTab] = useState('subscriptions'),
     [error, setError] = useState(''),
@@ -50,6 +57,7 @@ export default function Dashboard({ username }: { username: string }) {
       }
       if (!r.ok) throw Error(j.error || '读取数据失败');
       setData(j.data);
+      setUsername(j.username);
       dataRef.current = j.data;
       setLastSync(new Date().toLocaleTimeString('zh-CN', { hour: '2-digit', minute: '2-digit' }));
       setError('');
@@ -194,7 +202,7 @@ export default function Dashboard({ username }: { username: string }) {
             />
             <span className="sidebar-account-details">
               <strong>{username}</strong>
-              <small>管理员</small>
+              <small>{role === 'admin' ? '管理员' : '个人账号'}</small>
             </span>
             <Settings2 size={17} />
           </button>
@@ -252,7 +260,14 @@ export default function Dashboard({ username }: { username: string }) {
             ) : tab === 'families' ? (
               <Families {...props} />
             ) : (
-              <Settings data={data!} act={act} onReload={refresh} username={username} />
+              <Settings
+                data={data!}
+                act={act}
+                onReload={refresh}
+                username={username}
+                role={role}
+                onUsernameChange={setUsername}
+              />
             )}
           </div>
         ) : (

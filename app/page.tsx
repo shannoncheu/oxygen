@@ -5,5 +5,5 @@ export const dynamic = 'force-dynamic';
 export default async function Page() {
   const account = await currentAccount();
   if (!account) redirect('/login');
-  return <Dashboard username={account.username} />;
+  return <Dashboard username={account.username} role={account.role} />;
 }

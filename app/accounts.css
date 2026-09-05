@@ -1,0 +1,266 @@
+.username-settings {
+  margin-bottom: 12px;
+}
+.username-settings .success-message {
+  margin: 10px 0;
+}
+.account-management {
+  min-width: 0;
+  grid-column: 1 / -1;
+}
+.account-management-heading {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 20px;
+}
+.account-management-heading p {
+  margin: 0 0 18px;
+}
+.account-management-heading h2 {
+  margin-bottom: 10px;
+}
+.account-tabs {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 0 0 14px;
+  border-bottom: 1px solid var(--line);
+}
+.account-tabs > button:not(.icon-button) {
+  border: 0;
+  border-radius: 10px;
+  background: transparent;
+  color: var(--muted);
+  padding: 9px 13px;
+  min-height: 42px;
+  font-size: 14px;
+  font-weight: 600;
+}
+.account-tabs > button.active {
+  color: var(--accent);
+  background: var(--accent-soft);
+}
+.account-tabs span {
+  margin-left: 5px;
+  opacity: 0.8;
+  font-size: 12px;
+}
+.account-tabs .account-refresh {
+  margin-left: auto;
+}
+.account-loading,
+.managed-target {
+  display: flex;
+  gap: 9px;
+  align-items: center;
+}
+.account-loading {
+  color: var(--muted);
+  padding: 20px 0;
+}
+.managed-account,
+.managed-invitation {
+  padding: 19px 0;
+  border-bottom: 1px solid var(--line);
+}
+.managed-account:last-child,
+.managed-invitation:last-child {
+  border-bottom: 0;
+}
+.managed-account-info {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  min-width: 0;
+}
+.managed-account-info > div {
+  min-width: 0;
+}
+.managed-account-info strong,
+.managed-invitation strong,
+.managed-target {
+  overflow-wrap: anywhere;
+}
+.managed-account-info small {
+  display: block;
+  color: var(--muted);
+  font-size: 12px;
+  margin-top: 4px;
+}
+.managed-account-symbol {
+  flex-shrink: 0;
+  width: 40px;
+  height: 40px;
+  border-radius: 13px;
+  background: var(--accent-soft);
+  color: var(--accent);
+  display: grid;
+  place-items: center;
+}
+.managed-account-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px 18px;
+  margin: 10px 0 0 52px;
+}
+.managed-account-actions .text-button {
+  min-height: 36px;
+  font-size: 12px;
+}
+.managed-account-actions .account-delete {
+  color: var(--danger);
+}
+.managed-invitation {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 18px;
+}
+.managed-invitation > div {
+  min-width: 0;
+}
+.managed-invitation p {
+  font-size: 12px;
+  color: var(--muted);
+  margin: 7px 0 0;
+}
+.account-status {
+  display: inline-block;
+  white-space: nowrap;
+  padding: 2px 7px;
+  border-radius: 6px;
+  font-size: 11px;
+  color: var(--muted);
+  background: var(--bg);
+  margin-left: 10px;
+}
+.account-status.pending {
+  color: var(--success);
+}
+.account-status.disabled {
+  color: var(--danger);
+  margin-left: auto;
+}
+.account-empty {
+  font-size: 13px;
+  line-height: 1.8;
+  padding: 23px 0;
+  margin: 0;
+}
+.account-management-note {
+  border-top: 1px solid var(--line);
+  margin: 10px 0 0;
+  padding-top: 16px;
+}
+.managed-target {
+  font-weight: 600;
+  margin: 0;
+}
+.secret-link-dialog textarea {
+  font-size: 13px;
+  overflow-wrap: anywhere;
+  resize: none;
+}
+.secret-link-dialog .invitation-code {
+  font-size: 25px;
+  font-variant-numeric: tabular-nums;
+  letter-spacing: 0.24em;
+}
+.secret-link-dialog > p {
+  margin: 0;
+}
+.token-page {
+  min-height: 100dvh;
+  max-width: 540px;
+  margin: 0 auto;
+  padding: 56px 24px 32px;
+}
+.token-page > .wordmark {
+  width: max-content;
+  margin: 0 auto 32px;
+}
+.token-panel {
+  padding: 34px;
+}
+.token-symbol {
+  width: 54px;
+  height: 54px;
+  background: var(--accent-soft);
+  color: var(--accent);
+  display: grid;
+  place-items: center;
+  border-radius: 18px;
+  margin-bottom: 24px;
+}
+.token-panel h1 {
+  font-size: 25px;
+  margin-bottom: 12px;
+}
+.token-intro {
+  font-size: 14px;
+  line-height: 1.8;
+  margin-bottom: 25px;
+}
+.token-panel .field input[readonly] {
+  background: var(--bg);
+  color: var(--muted);
+}
+.token-panel .form-stack {
+  gap: 19px;
+}
+.token-panel .form-stack > h1,
+.token-panel .form-stack > p {
+  margin: 0;
+}
+.token-expiry {
+  line-height: 1.7;
+}
+.token-status {
+  display: flex;
+  gap: 12px;
+  align-items: center;
+  padding: 20px 0;
+}
+.token-login {
+  display: block;
+  width: max-content;
+  margin: 22px auto 0;
+  font-size: 13px;
+}
+@media (max-width: 700px) {
+  .account-management-heading {
+    gap: 12px;
+    flex-direction: column;
+  }
+  .account-management-heading > .button {
+    width: 100%;
+    margin-bottom: 18px;
+  }
+  .account-management-heading p {
+    margin-bottom: 0;
+  }
+  .managed-account-actions {
+    margin-left: 0;
+    gap: 3px 16px;
+  }
+  .managed-invitation {
+    gap: 8px;
+  }
+  .token-page {
+    padding: 32px 18px;
+  }
+  .token-panel {
+    padding: 25px 22px;
+  }
+  .token-panel .field input,
+  .token-panel input {
+    font-size: 16px !important;
+  }
+  .token-panel h1 {
+    font-size: 23px;
+  }
+  .token-expiry {
+    font-size: 12px;
+  }
+}

@@ -93,9 +93,9 @@ export default function Login() {
             <input
               name="username"
               autoComplete="username"
-              placeholder="管理员账号"
+              placeholder="用户名"
               required
-              maxLength={80}
+              maxLength={64}
             />
           </label>
           <label>
@@ -139,9 +139,9 @@ export default function Login() {
             )}
           </button>
           <p className="login-help">
-            未开放注册。
+            仅接受邀请注册。
             <br />
-            首次使用或忘记密码？请在服务器运行管理员命令。
+            需要账号或忘记密码，请联系站点管理员。
           </p>
         </form>
         <p className="login-footer">少一点忘记，多一点从容。</p>

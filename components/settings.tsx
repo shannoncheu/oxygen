@@ -23,6 +23,8 @@ import { AccountAvatar } from './account-avatar';
 import { AvatarSettings } from './avatar-settings';
 import { ExchangeSettings } from './exchange-settings';
 import { defaultExchangeSettings } from '@/lib/exchange';
+import { AccountManagement } from './account-management';
+import { UsernameSettings } from './username-settings';
 async function post(path: string, body: any) {
   const r = await fetch(path, {
     method: 'POST',
@@ -38,11 +40,15 @@ export default function Settings({
   act,
   onReload,
   username,
+  role,
+  onUsernameChange,
 }: {
   data: DataProps['data'];
   act: DataProps['act'];
   onReload: () => Promise<void>;
   username: string;
+  role: 'admin' | 'member';
+  onUsernameChange: (username: string) => void;
 }) {
   const [s, setS] = useState<SettingsType>(data.settings),
     [category, setCategory] = useState(''),
@@ -326,7 +332,7 @@ export default function Settings({
             />
             <div>
               <strong>{username}</strong>
-              <small>站点管理员</small>
+              <small>{role === 'admin' ? '站点管理员' : '个人账号'}</small>
             </div>
             <ShieldCheck size={20} />
           </div>
@@ -336,6 +342,13 @@ export default function Settings({
             onSave={async (patch) => {
               await act('settings.save', patch);
               setS((previous) => ({ ...previous, ...patch }));
+            }}
+          />
+          <UsernameSettings
+            username={username}
+            onChanged={(next) => {
+              onUsernameChange(next);
+              void onReload();
             }}
           />
           <button className="button full-width" onClick={() => setPassword(true)}>
@@ -352,7 +365,7 @@ export default function Settings({
             数据备份
           </h2>
           <p className="muted small">
-            完整 JSON 包含业务记录与上传图片，不包含账号密码、会话或部署密钥。
+            JSON 只包含你自己的业务记录和上传图片，不包含账号密码、会话或邀请信息。
           </p>
           <div className="export-buttons">
             <a className="button" href="/api/export?format=json">
@@ -385,6 +398,7 @@ export default function Settings({
           </p>
         </section>
       </div>
+      {role === 'admin' && <AccountManagement key={username} />}
       {password && <PasswordDialog onClose={() => setPassword(false)} />}{' '}
       {preview && (
         <Modal open onClose={() => setPreview(null)} title="恢复预览">

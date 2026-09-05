@@ -1,6 +1,6 @@
 import { route, json, bodyBytes, APIError } from '@/lib/server/api';
 import { requireAccount, requireUnsafeRequest } from '@/lib/server/auth';
-import { normalizeImage, saveUpload, MAX_IMAGE_BYTES } from '@/lib/server/uploads';
+import { normalizeImage, saveAuthenticatedUpload, MAX_IMAGE_BYTES } from '@/lib/server/uploads';
 export const runtime = 'nodejs';
 export const POST = route(async (request) => {
   requireUnsafeRequest(request);
@@ -18,8 +18,8 @@ export const POST = route(async (request) => {
   }
   const file = form.get('file');
   if (!(file instanceof File)) throw new APIError(400, '请选择图片。');
-  const saved = await saveUpload(
-    account.id,
+  const saved = await saveAuthenticatedUpload(
+    account,
     await normalizeImage(Buffer.from(await file.arrayBuffer())),
   );
   return json({ id: saved.id, url: saved.url });

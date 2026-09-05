@@ -91,6 +91,7 @@ export function isSnapshotStale(
 ): boolean {
   return (
     !snapshot ||
+    EXCHANGE_CURRENCIES.some((currency) => snapshot.rates[currency] === undefined) ||
     now >= Date.parse(snapshot.nextUpdateAt) ||
     now - Date.parse(snapshot.updatedAt) > 48 * 3600000
   );
