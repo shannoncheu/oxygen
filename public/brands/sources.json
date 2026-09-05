@@ -1,0 +1,118 @@
+{
+  "simpleIconsVersion": "16.29.0",
+  "verifiedAt": "2026-09-05",
+  "icons": [
+    {
+      "id": "spotify",
+      "name": "Spotify",
+      "slug": "spotify",
+      "source": "https://developer.spotify.com/documentation/general/design-and-branding/#using-our-logo",
+      "guidelines": "https://developer.spotify.com/documentation/general/design-and-branding/#using-our-logo",
+      "license": null
+    },
+    {
+      "id": "apple-music",
+      "name": "Apple Music",
+      "slug": "applemusic",
+      "source": "https://www.apple.com/itunes/marketing-on-music/identity-guidelines.html#apple-music-icon",
+      "guidelines": null,
+      "license": null
+    },
+    {
+      "id": "youtube",
+      "name": "YouTube Premium",
+      "slug": "youtube",
+      "source": "https://www.youtube.com/howyoutubeworks/resources/brand-resources/#logos-icons-and-colors",
+      "guidelines": "https://www.youtube.com/howyoutubeworks/resources/brand-resources/#logos-icons-and-colors",
+      "license": null
+    },
+    {
+      "id": "netflix",
+      "name": "Netflix",
+      "slug": "netflix",
+      "source": "https://brand.netflix.com/en/assets/logos",
+      "guidelines": "https://brand.netflix.com/en/assets/logos",
+      "license": null
+    },
+    {
+      "id": "icloud",
+      "name": "iCloud+",
+      "slug": "icloud",
+      "source": "https://commons.wikimedia.org/wiki/File:ICloud_logo.svg",
+      "guidelines": null,
+      "license": null
+    },
+    {
+      "id": "notion",
+      "name": "Notion",
+      "slug": "notion",
+      "source": "https://www.notion.so",
+      "guidelines": null,
+      "license": null
+    },
+    {
+      "id": "netease-music",
+      "name": "网易云音乐",
+      "slug": "neteasecloudmusic",
+      "source": "https://y.music.163.com/m",
+      "guidelines": null,
+      "license": null
+    },
+    {
+      "id": "bilibili",
+      "name": "哔哩哔哩",
+      "slug": "bilibili",
+      "source": "https://www.bilibili.com",
+      "guidelines": null,
+      "license": null
+    },
+    {
+      "id": "youtube-music",
+      "name": "YouTube Music",
+      "slug": "youtubemusic",
+      "source": "https://partnermarketinghub.withgoogle.com/#/brands",
+      "guidelines": null,
+      "license": null
+    },
+    {
+      "id": "apple-tv",
+      "name": "Apple TV+",
+      "slug": "appletv",
+      "source": "https://en.wikipedia.org/wiki/File:Apple_TV_(logo).svg",
+      "guidelines": null,
+      "license": null
+    },
+    {
+      "id": "dropbox",
+      "name": "Dropbox",
+      "slug": "dropbox",
+      "source": "https://www.dropbox.com/branding",
+      "guidelines": null,
+      "license": null
+    },
+    {
+      "id": "figma",
+      "name": "Figma",
+      "slug": "figma",
+      "source": "https://www.figma.com/using-the-figma-brand/",
+      "guidelines": "https://www.figma.com/using-the-figma-brand/",
+      "license": null
+    },
+    {
+      "id": "github",
+      "name": "GitHub",
+      "slug": "github",
+      "source": "https://github.com/logos",
+      "guidelines": "https://github.com/logos",
+      "license": null
+    },
+    {
+      "id": "1password",
+      "name": "1Password",
+      "slug": "1password",
+      "source": "https://1password.com/press",
+      "guidelines": "https://1password.com/press",
+      "license": null
+    }
+  ]
+}

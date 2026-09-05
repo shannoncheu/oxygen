@@ -1,0 +1,229 @@
+export interface ServiceDefinition {
+  id: string;
+  name: string;
+  aliases: string[];
+  color: string;
+  category: string;
+  website: string;
+  logo: string;
+  logoType: 'brand' | 'placeholder';
+}
+
+/** Local directory only. Prices and plans must always be entered by the user. */
+export const services: ServiceDefinition[] = [
+  {
+    id: 'spotify',
+    name: 'Spotify',
+    aliases: ['声田', '环声', '音乐'],
+    color: '#1ED760',
+    category: '音乐',
+    website: 'https://www.spotify.com/',
+    logo: '/brands/spotify.svg',
+    logoType: 'brand',
+  },
+  {
+    id: 'apple-music',
+    name: 'Apple Music',
+    aliases: ['苹果音乐', 'applemusic'],
+    color: '#FA243C',
+    category: '音乐',
+    website: 'https://music.apple.com/',
+    logo: '/brands/apple-music.svg',
+    logoType: 'brand',
+  },
+  {
+    id: 'youtube',
+    name: 'YouTube Premium',
+    aliases: ['YouTube', '油管', 'YouTube会员'],
+    color: '#FF0000',
+    category: '视频',
+    website: 'https://www.youtube.com/premium',
+    logo: '/brands/youtube.svg',
+    logoType: 'brand',
+  },
+  {
+    id: 'netflix',
+    name: 'Netflix',
+    aliases: ['奈飞', '网飞'],
+    color: '#E50914',
+    category: '视频',
+    website: 'https://www.netflix.com/',
+    logo: '/brands/netflix.svg',
+    logoType: 'brand',
+  },
+  {
+    id: 'microsoft365',
+    name: 'Microsoft 365',
+    aliases: ['微软365', 'Office', 'Office365', 'Microsoft365'],
+    color: '#6264D8',
+    category: '效率',
+    website: 'https://www.microsoft.com/microsoft-365',
+    logo: '/brands/microsoft365.svg',
+    logoType: 'placeholder',
+  },
+  {
+    id: 'icloud',
+    name: 'iCloud+',
+    aliases: ['iCloud', '苹果云', 'icloudplus'],
+    color: '#3693F3',
+    category: '云存储',
+    website: 'https://www.apple.com/icloud/',
+    logo: '/brands/icloud.svg',
+    logoType: 'brand',
+  },
+  {
+    id: 'notion',
+    name: 'Notion',
+    aliases: ['笔记', 'notionai'],
+    color: '#191919',
+    category: '效率',
+    website: 'https://www.notion.so/',
+    logo: '/brands/notion.svg',
+    logoType: 'brand',
+  },
+  {
+    id: 'qq-music',
+    name: 'QQ音乐',
+    aliases: ['QQ Music', 'qqmusic', '绿钻', '绿钻豪华版'],
+    color: '#31C27C',
+    category: '音乐',
+    website: 'https://y.qq.com/',
+    logo: '/brands/qq-music.png',
+    logoType: 'brand',
+  },
+  {
+    id: 'netease-music',
+    name: '网易云音乐',
+    aliases: ['网易云', 'NetEase', '云音乐', '黑胶VIP'],
+    color: '#D43C33',
+    category: '音乐',
+    website: 'https://music.163.com/',
+    logo: '/brands/netease-music.svg',
+    logoType: 'brand',
+  },
+  {
+    id: 'tencent-video',
+    name: '腾讯视频',
+    aliases: ['Tencent Video', '企鹅影视', '腾讯会员'],
+    color: '#0098FF',
+    category: '视频',
+    website: 'https://v.qq.com/',
+    logo: '/brands/tencent-video.svg',
+    logoType: 'brand',
+  },
+  {
+    id: 'iqiyi',
+    name: '爱奇艺',
+    aliases: ['iQIYI', '奇异果', '爱奇艺会员'],
+    color: '#00DC5A',
+    category: '视频',
+    website: 'https://www.iqiyi.com/',
+    logo: '/brands/iqiyi.png',
+    logoType: 'brand',
+  },
+  {
+    id: 'bilibili',
+    name: '哔哩哔哩',
+    aliases: ['bilibili', 'B站', '大会员'],
+    color: '#00A1D6',
+    category: '视频',
+    website: 'https://www.bilibili.com/',
+    logo: '/brands/bilibili.svg',
+    logoType: 'brand',
+  },
+  {
+    id: 'baidu-netdisk',
+    name: '百度网盘',
+    aliases: ['百度云', 'Baidu Netdisk', '超级会员', 'SVIP'],
+    color: '#3979F6',
+    category: '云存储',
+    website: 'https://pan.baidu.com/',
+    logo: '/brands/baidu-netdisk.svg',
+    logoType: 'placeholder',
+  },
+  {
+    id: 'alipan',
+    name: '阿里云盘',
+    aliases: ['阿里网盘', 'Alipan', 'Aliyun Drive'],
+    color: '#7369F7',
+    category: '云存储',
+    website: 'https://www.alipan.com/',
+    logo: '/brands/alipan.svg',
+    logoType: 'placeholder',
+  },
+  {
+    id: 'youtube-music',
+    name: 'YouTube Music',
+    aliases: ['油管音乐', 'youtubemusic'],
+    color: '#FF0000',
+    category: '音乐',
+    website: 'https://music.youtube.com/',
+    logo: '/brands/youtube-music.svg',
+    logoType: 'brand',
+  },
+  {
+    id: 'apple-tv',
+    name: 'Apple TV+',
+    aliases: ['Apple TV', '苹果电视', 'appletv'],
+    color: '#222222',
+    category: '视频',
+    website: 'https://tv.apple.com/',
+    logo: '/brands/apple-tv.svg',
+    logoType: 'brand',
+  },
+  {
+    id: 'dropbox',
+    name: 'Dropbox',
+    aliases: ['drop box'],
+    color: '#0061FF',
+    category: '云存储',
+    website: 'https://www.dropbox.com/',
+    logo: '/brands/dropbox.svg',
+    logoType: 'brand',
+  },
+  {
+    id: 'figma',
+    name: 'Figma',
+    aliases: ['设计', 'figma pro'],
+    color: '#F24E1E',
+    category: '效率',
+    website: 'https://www.figma.com/',
+    logo: '/brands/figma.svg',
+    logoType: 'brand',
+  },
+  {
+    id: 'github',
+    name: 'GitHub',
+    aliases: ['Github Copilot', 'Copilot', 'github pro'],
+    color: '#181717',
+    category: '效率',
+    website: 'https://github.com/',
+    logo: '/brands/github.svg',
+    logoType: 'brand',
+  },
+  {
+    id: '1password',
+    name: '1Password',
+    aliases: ['密码管理', 'onepassword'],
+    color: '#145FE4',
+    category: '效率',
+    website: 'https://1password.com/',
+    logo: '/brands/1password.svg',
+    logoType: 'brand',
+  },
+];
+
+export const serviceCatalog = services;
+export const SERVICE_CATALOG = services;
+export function findService(id: string) {
+  return services.find((service) => service.id === id);
+}
+export function searchServices(query: string) {
+  const term = query.trim().toLocaleLowerCase().replace(/\s+/g, '');
+  return services.filter((service) =>
+    [service.name, ...service.aliases].some((name) =>
+      name.toLocaleLowerCase().replace(/\s+/g, '').includes(term),
+    ),
+  );
+}
+export const catalog = services;

@@ -1,0 +1,256 @@
+/* Essential information stays readable on both dense and touch layouts. */
+.greeting,
+.stat-label,
+.section-heading > .muted,
+.table-head,
+.sub-meta,
+.next-date small,
+.subscription-price small,
+.bill-info small,
+.notice,
+.field-hint,
+.notes,
+.small,
+.setting-row p,
+.settings-about p,
+.empty p,
+.calm-empty .muted,
+.reminder small,
+.aside-note,
+.calendar-caption {
+  font-size: 12px;
+}
+.subscription-name strong,
+.subscription-price .money,
+.next-date,
+.service-picker > button > span:not(.service-logo),
+.setting-row strong,
+.bill-info strong,
+.member-description strong,
+.source-row > span:nth-child(2),
+.split-preview,
+.detail-meta strong,
+.period-picker {
+  font-size: 14px;
+}
+.badge,
+.count-pill,
+.inline-members small,
+.renewal-days,
+.renewal-card small,
+.stat-card p,
+.stat-number small,
+.chart-column > span,
+.category-stat small,
+.family-card-bottom small,
+.family-card .small,
+.member-description > span,
+.member-description small,
+.family-head-price > span:last-child,
+.calendar-more {
+  font-size: 12px;
+}
+.list-toolbar .search-field input,
+.list-toolbar select,
+.filter-row select,
+.list-toolbar .button,
+.text-button,
+.detail-actions .button,
+.small-button,
+.setting-row > select,
+.setting-row > input,
+.export-buttons .button,
+.import-button,
+.theme-options > button,
+.selected-service span:not(.service-logo) {
+  font-size: 13px !important;
+}
+.app-footer,
+.sidebar-label,
+.private-note span,
+.sidebar-account small {
+  font-size: 12px;
+}
+.private-note strong {
+  font-size: 13px;
+}
+.renewal-card .row-between {
+  flex-wrap: wrap;
+}
+.renewal-days {
+  gap: 3px;
+}
+.stat-card:not(.stat-primary) .amounts .money {
+  font-size: 17px;
+}
+.calendar-cell .date-number {
+  font-size: 14px;
+}
+@media (max-width: 700px) {
+  .greeting {
+    font-size: 12px;
+  }
+  .stat-card:not(.stat-primary) .stat-label {
+    font-size: 12px;
+  }
+  .stat-card p {
+    font-size: 12px;
+  }
+  .stat-card .stat-bottom {
+    line-height: 1.6;
+  }
+  .stat-card:not(.stat-primary) .amounts .money {
+    font-size: 16px;
+  }
+  .stat-number small {
+    font-size: 12px;
+  }
+  .section-heading > .muted {
+    font-size: 12px;
+  }
+  .renewal-card small,
+  .renewal-days {
+    font-size: 12px;
+  }
+  .renewal-card .row-between:first-child {
+    flex-wrap: nowrap;
+  }
+  .renewal-card {
+    min-height: 181px;
+  }
+  .list-toolbar .filter-button {
+    font-size: 0 !important;
+  }
+  .list-toolbar select {
+    max-width: 107px;
+    font-size: 12px !important;
+  }
+  .subscription-name strong {
+    font-size: 14px;
+  }
+  .sub-meta {
+    font-size: 12px;
+  }
+  .subscription-name {
+    padding-bottom: 23px;
+  }
+  .next-date {
+    font-size: 12px;
+    bottom: 14px;
+    left: 51px;
+  }
+  .next-date small {
+    font-size: 12px;
+  }
+  .subscription-price .money {
+    font-size: 15px;
+  }
+  .subscription-price small {
+    font-size: 12px;
+  }
+  .inline-members small {
+    font-size: 11px;
+  }
+  .app-footer {
+    font-size: 11px;
+  }
+  .mobile-nav span {
+    font-size: 12px;
+  }
+  .mobile-nav {
+    padding-top: 5px;
+    padding-bottom: 5px;
+  }
+  .mobile-nav button {
+    min-height: 50px;
+  }
+  .field > label,
+  label {
+    font-size: 14px;
+  }
+  .field-hint,
+  .notice {
+    font-size: 12px;
+  }
+  .detail-meta strong {
+    font-size: 14px;
+  }
+  .service-picker > button > span:not(.service-logo) {
+    font-size: 13px;
+  }
+  .bill-info strong {
+    font-size: 14px;
+  }
+  .bill-info small {
+    font-size: 12px;
+  }
+  .member-description strong {
+    font-size: 14px;
+  }
+  .member-description > span,
+  .member-description small {
+    font-size: 12px;
+  }
+  .member-row .icon-button {
+    min-width: 34px;
+  }
+  .calendar-caption {
+    font-size: 11px;
+  }
+  .calendar-more {
+    font-size: 10px;
+  }
+  .calendar-logos {
+    flex-wrap: nowrap;
+  }
+  .month-overview p {
+    font-size: 12px;
+  }
+  .month-navigation strong {
+    font-size: 14px;
+  }
+  .chart-column > span {
+    font-size: 10px;
+  }
+  .theme-options > button {
+    font-size: 12px !important;
+    min-width: 50px;
+  }
+  .settings-panel .small {
+    font-size: 12px;
+  }
+  .setting-row p {
+    font-size: 12px;
+  }
+  .setting-row strong {
+    font-size: 14px;
+  }
+  .setting-row > select,
+  .setting-row > input {
+    max-width: 153px;
+  }
+  .page-description p {
+    font-size: 14px;
+  }
+  .empty p {
+    font-size: 12px;
+  }
+  .empty h3 {
+    font-size: 17px;
+  }
+  .small-button {
+    font-size: 12px !important;
+  }
+  .allocation-row {
+    flex-wrap: wrap;
+  }
+  .allocation-row .button {
+    margin-left: auto;
+  }
+  .family-detail-head > .button {
+    font-size: 12px;
+  }
+  .family-head-price {
+    width: 100%;
+  }
+}

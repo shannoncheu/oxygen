@@ -1,0 +1,16 @@
+{$DOMAIN} {
+  encode zstd gzip
+  reverse_proxy app:3000 {
+    # Discard client-supplied forwarded headers; the app trusts this proxy only.
+    header_up X-Forwarded-For {remote_host}
+    header_up X-Forwarded-Proto {scheme}
+  }
+  header {
+    X-Content-Type-Options nosniff
+    Referrer-Policy same-origin
+    X-Frame-Options DENY
+    Strict-Transport-Security "max-age=31536000"
+    -Server
+  }
+  # Access logging is deliberately disabled: URLs can contain private details.
+}

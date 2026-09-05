@@ -1,0 +1,17 @@
+node_modules/
+/.next/
+.env
+.env.*
+!.env.example
+/data/
+*.tsbuildinfo
+/test-results/
+/playwright-report/
+/backups/
+/.data/
+/.next-e2e/
+/.operation-lock/
+*.log
+*.dump
+*.tar.gz
+*.zip

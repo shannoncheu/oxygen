@@ -1,0 +1,8 @@
+node_modules
+.next
+.next-e2e
+.data
+/data
+test-results
+pnpm-lock.yaml
+public

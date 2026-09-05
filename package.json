@@ -1,0 +1,47 @@
+{
+  "name": "renew-private",
+  "version": "1.0.0",
+  "private": true,
+  "packageManager": "pnpm@11.19.0",
+  "engines": {
+    "node": ">=24 <25"
+  },
+  "scripts": {
+    "dev": "next dev --webpack",
+    "build": "next build --webpack",
+    "start": "next start",
+    "typecheck": "tsc --noEmit",
+    "test": "tsx --test tests/*.test.ts",
+    "admin": "tsx scripts/admin.ts",
+    "migrate": "tsx scripts/migrate.ts",
+    "test:e2e": "playwright test",
+    "format": "prettier --write app components lib scripts e2e tests *.ts *.json"
+  },
+  "dependencies": {
+    "@dicebear/core": "9.4.2",
+    "@dicebear/thumbs": "9.4.2",
+    "@next/env": "16.3.4",
+    "@node-rs/argon2": "2.2.0",
+    "@radix-ui/react-dialog": "1.1.23",
+    "drizzle-orm": "0.45.2",
+    "lucide-react": "1.41.0",
+    "next": "16.3.4",
+    "pg": "8.23.0",
+    "react": "19.2.8",
+    "react-dom": "19.2.8",
+    "sharp": "0.35.4",
+    "zod": "4.5.4"
+  },
+  "devDependencies": {
+    "@electric-sql/pglite": "0.5.8",
+    "@playwright/test": "1.62.1",
+    "@types/node": "26.4.1",
+    "@types/pg": "8.23.1",
+    "@types/react": "19.2.18",
+    "@types/react-dom": "19.2.7",
+    "prettier": "3.9.6",
+    "simple-icons": "16.29.0",
+    "tsx": "4.23.13",
+    "typescript": "7.0.2"
+  }
+}
