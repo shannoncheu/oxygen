@@ -10,16 +10,9 @@ import {
 } from 'lucide-react';
 import type { Currency } from '@/lib/model';
 import { projectBills, summarizeByCurrency, formatMoney } from '@/lib/billing';
-import {
-  Amounts,
-  DataProps,
-  Empty,
-  Logo,
-  Money,
-  monthRange,
-  offsetDay,
-  shiftMonth,
-} from './shared';
+import { convertTotal } from '@/lib/exchange';
+import { CurrencyTotal } from './currency-total';
+import { DataProps, Empty, Logo, Money, monthRange, offsetDay, shiftMonth } from './shared';
 import { BillRow } from './subscriptions';
 export default function Statistics({ data, act, today, openSubscription }: DataProps) {
   const [view, setView] = useState('calendar'),
@@ -41,23 +34,30 @@ export default function Statistics({ data, act, today, openSubscription }: DataP
   const months = Array.from({ length: 6 }, (_, i) => shiftMonth(month, i - 5));
   const totals = months.map((m) => {
     const r = monthRange(m);
-    return summarizeByCurrency(projectBills(data, r.from, r.to))[currency] || 0;
+    return convertTotal(
+      summarizeByCurrency(projectBills(data, r.from, r.to)),
+      currency,
+      data.settings.exchange,
+    ).amountMinor;
   });
-  const max = Math.max(1, ...totals);
-  const relevant = bills.filter((b) => b.currency === currency && b.status !== 'skipped');
-  const sum = relevant.reduce((n, b) => n + b.amountMinor, 0);
-  const cats = Object.entries(
-    relevant.reduce(
-      (v, b) => ({ ...v, [b.category]: (v[b.category] || 0) + b.amountMinor }),
-      {} as Record<string, number>,
-    ),
-  ).sort((a, b) => b[1] - a[1]);
-  const sources = Object.entries(
-    relevant.reduce(
-      (v, b) => ({ ...v, [b.subscriptionId]: (v[b.subscriptionId] || 0) + b.amountMinor }),
-      {} as Record<string, number>,
-    ),
-  ).sort((a, b) => b[1] - a[1]);
+  const max = Math.max(1, ...totals.map((value) => value ?? 0));
+  const relevant = bills.filter((b) => b.status !== 'skipped');
+  const monthTotal = convertTotal(summarizeByCurrency(relevant), currency, data.settings.exchange);
+  const sum = monthTotal.amountMinor || 0;
+  function grouped(field: 'category' | 'subscriptionId'): [string, number][] {
+    if (monthTotal.amountMinor === null) return [];
+    const groups = new Map<string, typeof relevant>();
+    for (const bill of relevant)
+      groups.set(bill[field], [...(groups.get(bill[field]) || []), bill]);
+    return [...groups]
+      .map(([name, rows]): [string, number] => [
+        name,
+        convertTotal(summarizeByCurrency(rows), currency, data.settings.exchange).amountMinor || 0,
+      ])
+      .sort((a, b) => b[1] - a[1]);
+  }
+  const cats = grouped('category');
+  const sources = grouped('subscriptionId');
   function changeMonth(m: string) {
     setMonth(m);
     setDay(m + '-01');
@@ -92,7 +92,11 @@ export default function Statistics({ data, act, today, openSubscription }: DataP
             含已记录付款，跳过不计入
           </p>
         </div>
-        <Amounts values={summarizeByCurrency(bills)} />
+        <CurrencyTotal
+          values={summarizeByCurrency(bills)}
+          target={currency}
+          exchange={data.settings.exchange}
+        />
       </div>
       <div className="month-navigation">
         <button
@@ -124,12 +128,14 @@ export default function Statistics({ data, act, today, openSubscription }: DataP
         {view === 'trend' && (
           <select
             className="currency-picker"
-            aria-label="统计币种"
+            aria-label="统计折算币种"
             value={currency}
             onChange={(e) => setCurrency(e.target.value as Currency)}
           >
             {allCurrencies.map((c) => (
-              <option key={c}>{c}</option>
+              <option key={c} value={c}>
+                折算 {c}
+              </option>
             ))}
           </select>
         )}
@@ -206,16 +212,16 @@ export default function Statistics({ data, act, today, openSubscription }: DataP
           <section className="panel trend-main">
             <div className="section-heading">
               <h3>最近六个月的计划支出</h3>
-              <span className="badge">{currency} · 按实际账期</span>
+              <span className="badge">统一折算 {currency}</span>
             </div>
             <div className="bar-chart">
               {months.map((m, i) => (
                 <div className="chart-column" key={m}>
-                  <span>{formatMoney(totals[i], currency)}</span>
+                  <span>{totals[i] === null ? '缺少汇率' : formatMoney(totals[i]!, currency)}</span>
                   <div className="bar-track">
                     <i
                       style={{
-                        height: totals[i] ? Math.max(3, (totals[i] / max) * 100) + '%' : '0%',
+                        height: totals[i] ? Math.max(3, (totals[i]! / max) * 100) + '%' : '0%',
                         background: i === 5 ? 'var(--accent)' : 'var(--accent-soft)',
                       }}
                     />
@@ -225,7 +231,7 @@ export default function Statistics({ data, act, today, openSubscription }: DataP
               ))}
             </div>
             <p className="muted small">
-              每个月按该月账期合计。未来账单为当前规则推算；已生成账期使用历史快照。年付金额集中在续费月份。
+              按各月账期合计，使用当前保存的汇率折算。年付计入续费月份；折算金额可能与实际扣款不同。
             </p>
           </section>
           <section className="panel category-panel">
@@ -258,7 +264,11 @@ export default function Statistics({ data, act, today, openSubscription }: DataP
                 </div>
               ))
             ) : (
-              <p className="muted">这个币种在本月暂无计划支出。</p>
+              <p className="muted">
+                {monthTotal.amountMinor === null
+                  ? '补齐汇率后显示分类占比。'
+                  : '本月暂无计划支出。'}
+              </p>
             )}
           </section>
           <section className="panel sources-panel">
@@ -280,7 +290,9 @@ export default function Statistics({ data, act, today, openSubscription }: DataP
                 );
               })
             ) : (
-              <p className="muted">暂无记录。</p>
+              <p className="muted">
+                {monthTotal.amountMinor === null ? '补齐汇率后显示支出来源。' : '暂无记录。'}
+              </p>
             )}
           </section>
         </div>

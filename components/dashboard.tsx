@@ -9,7 +9,6 @@ import {
   Bell,
   RefreshCw,
   ArrowUpRight,
-  ShieldCheck,
 } from 'lucide-react';
 import type { BusinessData, Subscription } from '@/lib/model';
 import { projectBills, todayInTimezone } from '@/lib/billing';
@@ -20,6 +19,7 @@ import Statistics from './statistics';
 import Settings from './settings';
 import { Brand } from './brand';
 import { AccountAvatar } from './account-avatar';
+import { isSnapshotStale } from '@/lib/exchange';
 const tabs = [
   { id: 'subscriptions', label: '订阅', icon: LayoutGrid, title: '我的订阅' },
   { id: 'statistics', label: '统计', icon: ChartNoAxesCombined, title: '支出统计' },
@@ -36,6 +36,8 @@ export default function Dashboard({ username }: { username: string }) {
     [selected, setSelected] = useState<string | null>(null),
     [reminders, setReminders] = useState(false);
   const dataRef = useRef(data);
+  const rateAttempt = useRef(0);
+  const actionQueue = useRef<Promise<void>>(Promise.resolve());
   dataRef.current = data;
   const refresh = useCallback(async () => {
     setSyncing(true);
@@ -87,25 +89,59 @@ export default function Dashboard({ username }: { username: string }) {
     media.addEventListener('change', apply);
     return () => media.removeEventListener('change', apply);
   }, [data?.settings.theme]);
-  const act: Act = async (type, payload) => {
-    const r = await fetch('/api/action', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json', 'X-Requested-With': 'subscribo' },
-      body: JSON.stringify({ type, payload, revision: dataRef.current?.revision }),
+  const act: Act = (type, payload) => {
+    // An automatic rate update and a user's save must use successive revisions.
+    const operation = actionQueue.current.then(async () => {
+      const r = await fetch('/api/action', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'X-Requested-With': 'subscribo' },
+        body: JSON.stringify({ type, payload, revision: dataRef.current?.revision }),
+      });
+      const j = await r.json();
+      if (r.status === 401) {
+        location.href = '/login';
+        throw Error('登录已过期');
+      }
+      if (!r.ok) {
+        if (r.status === 409) await refresh();
+        throw Error(j.error || '保存失败，请重试');
+      }
+      setData(j.data);
+      dataRef.current = j.data;
+      setLastSync(new Date().toLocaleTimeString('zh-CN', { hour: '2-digit', minute: '2-digit' }));
     });
-    const j = await r.json();
-    if (r.status === 401) {
-      location.href = '/login';
-      throw Error('登录已过期');
-    }
-    if (!r.ok) {
-      if (r.status === 409) await refresh();
-      throw Error(j.error || '保存失败，请重试');
-    }
-    setData(j.data);
-    dataRef.current = j.data;
-    setLastSync(new Date().toLocaleTimeString('zh-CN', { hour: '2-digit', minute: '2-digit' }));
+    actionQueue.current = operation.catch(() => {});
+    return operation;
   };
+  useEffect(() => {
+    if (!data || data.settings.exchange?.autoUpdate === false) return;
+    const snapshot = data.settings.exchange?.snapshot;
+    if (snapshot && !isSnapshotStale(snapshot)) return;
+    if (Date.now() - rateAttempt.current < 15 * 60 * 1000) return;
+    rateAttempt.current = Date.now();
+    let cancelled = false;
+    void (async () => {
+      try {
+        const response = await fetch('/api/exchange');
+        const result = await response.json();
+        if (
+          !response.ok ||
+          !result.snapshot ||
+          cancelled ||
+          dataRef.current?.settings.exchange?.autoUpdate === false
+        )
+          return;
+        if (result.snapshot.fetchedAt !== dataRef.current?.settings.exchange?.snapshot?.fetchedAt) {
+          await act('exchange.snapshot', result.snapshot);
+        }
+      } catch {
+        // Keep the last saved rates. Totals identify missing or outdated rates.
+      }
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, [data?.settings.exchange?.autoUpdate, data?.settings.exchange?.snapshot?.fetchedAt, !!data]);
   function navigate(id: string) {
     setTab(id);
     history.pushState({}, '', id === 'subscriptions' ? '/' : `/?view=${id}`);
@@ -145,19 +181,17 @@ export default function Dashboard({ username }: { username: string }) {
           ))}
         </nav>
         <div className="sidebar-bottom">
-          <div className="private-note">
-            <ShieldCheck size={19} />
-            <div>
-              <strong>安心的私人空间</strong>
-              <span>数据存储在你的服务器</span>
-            </div>
-          </div>
           <button
             className="sidebar-account"
             onClick={() => navigate('settings')}
             aria-label={`${username} 的账号设置`}
           >
-            <AccountAvatar username={username} size={40} />
+            <AccountAvatar
+              username={username}
+              size={40}
+              avatarUrl={data?.settings.avatarUrl}
+              avatarSeed={data?.settings.avatarSeed}
+            />
             <span className="sidebar-account-details">
               <strong>{username}</strong>
               <small>管理员</small>
@@ -228,7 +262,6 @@ export default function Dashboard({ username }: { username: string }) {
           </section>
         )}
         <footer className="app-footer">
-          <span>oxygen · 私人订阅管理</span>
           <span className="sync-indicator">
             <i />
             {lastSync ? `${lastSync} 已同步` : '连接中'}

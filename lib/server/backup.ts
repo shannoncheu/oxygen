@@ -2,7 +2,7 @@ import type { BusinessData } from '../model';
 import { validateData } from '../domain';
 import { projectBills, todayInTimezone } from '../billing';
 import { APIError } from './api';
-import { normalizeImage, readUpload, MAX_IMAGE_BYTES } from './uploads';
+import { normalizeImage, readUpload, MAX_IMAGE_BYTES, referencedUploadIds } from './uploads';
 
 export interface Backup {
   format: 'subscribo';
@@ -12,14 +12,7 @@ export interface Backup {
   uploads: { id: string; contentBase64: string }[];
 }
 export function referencedUploads(data: BusinessData) {
-  return [
-    ...new Set(
-      [...data.subscriptions, ...data.bills]
-        .map((s) => s.logo)
-        .filter((value) => typeof value === 'string' && value.startsWith('/api/files/'))
-        .map((value) => value.slice('/api/files/'.length)),
-    ),
-  ];
+  return referencedUploadIds(data);
 }
 export async function exportBackup(ownerId: string, data: BusinessData): Promise<Backup> {
   const uploads = [];

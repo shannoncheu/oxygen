@@ -4,13 +4,13 @@ export function OxygenMark({ size = 40 }: { size?: number }) {
       className="oxygen-mark"
       width={size}
       height={size}
-      viewBox="0 0 40 40"
+      viewBox="0 0 32 32"
       fill="none"
       aria-hidden="true"
       focusable="false"
     >
-      <circle cx="18" cy="23" r="11.5" stroke="currentColor" strokeWidth="5.5" />
-      <circle className="oxygen-bubble" cx="32" cy="8" r="4.25" fill="currentColor" />
+      <circle cx="14" cy="18" r="10" stroke="currentColor" strokeWidth="6" />
+      <circle className="oxygen-bubble" cx="26" cy="5" r="4" fill="currentColor" />
     </svg>
   );
 }

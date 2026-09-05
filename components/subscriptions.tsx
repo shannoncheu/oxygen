@@ -1,5 +1,5 @@
 'use client';
-import { useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import {
   ArrowUpRight,
   ChevronRight,
@@ -27,10 +27,12 @@ import {
   summarizeByCurrency,
 } from '@/lib/billing';
 import { activeMemberships } from '@/lib/domain';
-import { catalog } from '@/lib/catalog';
+import { searchServices, type ServiceDefinition } from '@/lib/catalog';
+import { convertMinor } from '@/lib/exchange';
+import { CurrencyTotal } from './currency-total';
+import { ServiceSearch, discoverService } from './service-search';
 import {
   Act,
-  Amounts,
   Avatar,
   currencies,
   cycleLabel,
@@ -82,7 +84,18 @@ export function SubscriptionView({ data, act, today, openSubscription }: DataPro
       sort === 'name'
         ? a.name.localeCompare(b.name, 'zh')
         : sort === 'amount'
-          ? a.currency.localeCompare(b.currency) || b.amountMinor - a.amountMinor
+          ? (convertMinor(
+              b.amountMinor,
+              b.currency,
+              data.settings.displayCurrency,
+              data.settings.exchange,
+            ) ?? -1) -
+            (convertMinor(
+              a.amountMinor,
+              a.currency,
+              data.settings.displayCurrency,
+              data.settings.exchange,
+            ) ?? -1)
           : (nextDue(a, today) || '9999').localeCompare(nextDue(b, today) || '9999'),
     );
   return (
@@ -92,7 +105,11 @@ export function SubscriptionView({ data, act, today, openSubscription }: DataPro
           <span className="stat-label">
             本月预计支出<span>{Number(today.slice(5, 7))} 月</span>
           </span>
-          <Amounts values={summarizeByCurrency(monthBills)} />
+          <CurrencyTotal
+            values={summarizeByCurrency(monthBills)}
+            target={data.settings.displayCurrency}
+            exchange={data.settings.exchange}
+          />
           <p>按本月账期计算，含已记录付款</p>
           <CalendarDays className="stat-watermark" aria-hidden="true" />
         </section>
@@ -105,7 +122,12 @@ export function SubscriptionView({ data, act, today, openSubscription }: DataPro
             {weekBills.length}
             <small>笔</small>
           </div>
-          <Amounts values={summarizeByCurrency(weekBills)} empty="这周可以放心啦" />
+          <CurrencyTotal
+            values={summarizeByCurrency(weekBills)}
+            target={data.settings.displayCurrency}
+            exchange={data.settings.exchange}
+            empty="这周没有计划支出"
+          />
           <p>
             {today.slice(5).replace('-', '/')} — {offsetDay(today, 6).slice(5).replace('-', '/')}
           </p>
@@ -194,7 +216,7 @@ export function SubscriptionView({ data, act, today, openSubscription }: DataPro
               </button>
               <select aria-label="订阅排序" value={sort} onChange={(e) => setSort(e.target.value)}>
                 <option value="date">按续费日期</option>
-                <option value="amount">按币种与金额</option>
+                <option value="amount">按折算金额</option>
                 <option value="name">按名称</option>
               </select>
             </div>
@@ -206,7 +228,12 @@ export function SubscriptionView({ data, act, today, openSubscription }: DataPro
                   onChange={(e) => setCategory(e.target.value)}
                 >
                   <option value="all">全部分类</option>
-                  {data.settings.categories.map((c) => (
+                  {Array.from(
+                    new Set([
+                      ...data.settings.categories,
+                      ...data.subscriptions.map((item) => item.category),
+                    ]),
+                  ).map((c) => (
                     <option key={c}>{c}</option>
                   ))}
                 </select>
@@ -379,7 +406,7 @@ export function SubscriptionView({ data, act, today, openSubscription }: DataPro
             )}
           </section>
           <p className="aside-note">
-            所有金额按原币种分别显示。
+            总额按 {data.settings.displayCurrency} 折算，单笔保留原币种。
             <br />
             仅记录费用，不会自动扣款。
           </p>
@@ -435,8 +462,59 @@ export function SubscriptionEditor({
   const [term, setTerm] = useState(''),
     [busy, setBusy] = useState(false),
     [error, setError] = useState(''),
-    [picked, setPicked] = useState(!!subscription);
+    [picked, setPicked] = useState(!!subscription),
+    [logoBusy, setLogoBusy] = useState(false),
+    [logoMessage, setLogoMessage] = useState('');
+  const matches = searchServices(term);
+  const logoRequest = useRef<AbortController | null>(null);
+  useEffect(() => () => logoRequest.current?.abort(), []);
+  function cancelLogoLookup() {
+    logoRequest.current?.abort();
+    logoRequest.current = null;
+    setLogoBusy(false);
+    setLogoMessage('');
+  }
+  function pickService(c: ServiceDefinition) {
+    cancelLogoLookup();
+    setS((old: any) => ({
+      ...old,
+      name: c.name,
+      serviceId: c.id,
+      logo: c.logo,
+      color: c.color,
+      category: c.category,
+      website: c.website,
+    }));
+    setPicked(true);
+    setLogoMessage('');
+  }
+  async function findLogo(query: string) {
+    if (!query.trim() || logoBusy) return;
+    const request = new AbortController();
+    logoRequest.current = request;
+    setLogoBusy(true);
+    setLogoMessage('');
+    try {
+      const result = await discoverService(query.trim(), request.signal);
+      if (request.signal.aborted) return;
+      setS((old: any) => ({
+        ...old,
+        logo: result.service.logo,
+        name: old.name || result.service.name,
+        website: old.website || result.service.website,
+      }));
+      setLogoMessage(`已获取图标 · ${result.sourceLabel}`);
+    } catch (e) {
+      if (!request.signal.aborted) setLogoMessage((e as Error).message);
+    } finally {
+      if (logoRequest.current === request) {
+        logoRequest.current = null;
+        setLogoBusy(false);
+      }
+    }
+  }
   function set(key: string, value: any) {
+    if (['name', 'website', 'logo'].includes(key)) cancelLogoLookup();
     setS((old: any) => ({ ...old, [key]: value }));
   }
   async function submit(e: React.FormEvent) {
@@ -455,6 +533,7 @@ export function SubscriptionEditor({
   }
   async function upload(file?: File) {
     if (!file) return;
+    cancelLogoLookup();
     setBusy(true);
     setError('');
     try {
@@ -490,44 +569,27 @@ export function SubscriptionEditor({
           <div className="search-field picker-search">
             <Search size={18} />
             <input
-              placeholder="搜索服务，例如 Spotify、网易云…"
+              placeholder="输入应用名称或官网，如 ChatGPT、Claude…"
               value={term}
               onChange={(e) => setTerm(e.target.value)}
               aria-label="搜索常用服务"
-              autoFocus
             />
           </div>
           <div className="service-picker">
-            {catalog
-              .filter((c) =>
-                [c.name, ...c.aliases].join(' ').toLowerCase().includes(term.toLowerCase()),
-              )
-              .map((c) => (
-                <button
-                  key={c.id}
-                  onClick={() => {
-                    setS({
-                      ...s,
-                      name: c.name,
-                      serviceId: c.id,
-                      logo: c.logo,
-                      color: c.color,
-                      category: c.category,
-                      website: c.website,
-                    });
-                    setPicked(true);
-                  }}
-                >
-                  <Logo name={c.name} logo={c.logo} color={c.color} />
-                  <span>{c.name}</span>
-                  <Plus size={16} />
-                </button>
-              ))}
+            {matches.map((c) => (
+              <button key={c.id} onClick={() => pickService(c)}>
+                <Logo name={c.name} logo={c.logo} color={c.color} />
+                <span>{c.name}</span>
+                <Plus size={16} />
+              </button>
+            ))}
           </div>
+          <ServiceSearch query={term} enabled={matches.length === 0} onPick={pickService} />
           <button
             className="button custom-service"
             onClick={() => {
-              set('name', term);
+              set('name', /^https?:\/\//i.test(term) ? '' : term);
+              if (/^https?:\/\//i.test(term)) set('website', term);
               setPicked(true);
             }}
           >
@@ -544,7 +606,14 @@ export function SubscriptionEditor({
               <span>价格与套餐请按你的实际订阅填写</span>
             </div>
             {!subscription && (
-              <button type="button" className="text-button" onClick={() => setPicked(false)}>
+              <button
+                type="button"
+                className="text-button"
+                onClick={() => {
+                  cancelLogoLookup();
+                  setPicked(false);
+                }}
+              >
                 更换
               </button>
             )}
@@ -556,6 +625,9 @@ export function SubscriptionEditor({
                 maxLength={80}
                 value={s.name}
                 onChange={(e) => set('name', e.target.value)}
+                onBlur={() => {
+                  if (!s.logo && !s.website) void findLogo(s.name);
+                }}
               />
             </Field>
             <Field label="套餐名称（可选）">
@@ -681,8 +753,24 @@ export function SubscriptionEditor({
               placeholder="https://"
               value={s.website}
               onChange={(e) => set('website', e.target.value)}
+              onBlur={() => {
+                if (s.website && !s.logo) void findLogo(s.website);
+              }}
             />
           </Field>
+          <div className="logo-discovery-controls">
+            <button
+              type="button"
+              className="button"
+              disabled={busy || logoBusy || (!s.website && !s.name)}
+              onClick={() => findLogo(s.website || s.name)}
+            >
+              {logoBusy ? '正在获取图标…' : '自动获取图标'}
+            </button>
+            <span className="field-hint" aria-live="polite">
+              {logoMessage || '填写官网后可自动读取图标，也可以上传自己的图片。'}
+            </span>
+          </div>
           <div className="form-grid">
             <Field label="品牌色">
               <input type="color" value={s.color} onChange={(e) => set('color', e.target.value)} />
@@ -712,7 +800,7 @@ export function SubscriptionEditor({
             </p>
           )}
           <SubmitBar
-            busy={busy}
+            busy={busy || logoBusy}
             onCancel={onClose}
             label={subscription ? '保存修改' : '添加订阅'}
           />

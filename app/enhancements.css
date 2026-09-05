@@ -1,0 +1,200 @@
+.app-footer {
+  justify-content: flex-end;
+}
+.currency-total {
+  display: grid;
+  gap: 6px;
+  min-width: 0;
+  position: relative;
+  z-index: 1;
+}
+.currency-total-value {
+  font-size: 27px;
+  line-height: 1.25;
+  font-weight: 720;
+  letter-spacing: -0.8px;
+  font-variant-numeric: tabular-nums;
+  overflow-wrap: anywhere;
+}
+.stat-primary .currency-total-value {
+  font-size: 36px;
+}
+.stat-card:not(.stat-primary) .currency-total-value {
+  font-size: 19px;
+}
+.currency-total-originals,
+.currency-total-note,
+.currency-total-warning,
+.exchange-attribution {
+  font-size: 11px;
+  line-height: 1.55;
+  color: var(--muted);
+  overflow-wrap: anywhere;
+}
+.currency-total-warning {
+  color: var(--accent);
+}
+.exchange-attribution {
+  text-decoration: underline;
+  text-decoration-color: var(--line);
+  text-underline-offset: 3px;
+  width: fit-content;
+}
+.month-overview > .currency-total {
+  text-align: right;
+  max-width: 48%;
+}
+.month-overview .exchange-attribution {
+  justify-self: end;
+}
+.exchange-settings .section-heading {
+  flex-wrap: wrap;
+}
+.exchange-settings input[type='checkbox'] {
+  width: 20px;
+  height: 20px;
+  min-height: 20px;
+  accent-color: var(--accent);
+  flex-shrink: 0;
+}
+.manual-rates {
+  margin: 20px 0;
+  border-top: 1px solid var(--line);
+  border-bottom: 1px solid var(--line);
+  padding: 16px 0;
+}
+.manual-rates summary {
+  cursor: pointer;
+  font-size: 14px;
+  font-weight: 600;
+}
+.manual-rates > p {
+  margin: 14px 0;
+}
+.manual-rate-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 12px 18px;
+}
+.manual-rate-row {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  font-size: 12px;
+  font-weight: 400;
+  min-width: 0;
+}
+.manual-rate-row > span {
+  flex-shrink: 0;
+}
+.manual-rate-row input {
+  min-width: 0;
+  padding: 9px 8px;
+  font-size: 13px;
+}
+.avatar-settings {
+  margin: -10px 0 22px;
+  padding-bottom: 20px;
+  border-bottom: 1px solid var(--line);
+  gap: 12px;
+}
+.avatar-settings .import-button,
+.avatar-settings p {
+  margin: 0;
+}
+.avatar-actions {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 12px;
+}
+.avatar-actions .button,
+.avatar-actions .text-button {
+  font-size: 12px;
+}
+.service-picker {
+  max-height: 360px;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+}
+.service-discovery {
+  margin: 14px 0;
+}
+.discovery-status {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+  font-size: 13px;
+}
+.discovered-service {
+  width: 100%;
+  border: 1px solid var(--line);
+  border-radius: 14px;
+  padding: 16px;
+  background: var(--panel);
+  color: var(--ink);
+  display: flex;
+  align-items: center;
+  gap: 13px;
+  text-align: left;
+}
+.discovered-service:hover {
+  border-color: var(--accent);
+  background: var(--accent-soft);
+}
+.discovered-service > span:not(.service-logo) {
+  flex: 1;
+  min-width: 0;
+}
+.discovered-service strong,
+.discovered-service small {
+  display: block;
+}
+.discovered-service small {
+  margin-top: 4px;
+  color: var(--muted);
+  font-size: 11px;
+  overflow-wrap: anywhere;
+}
+.logo-discovery-controls {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+.logo-discovery-controls .button {
+  flex-shrink: 0;
+}
+@media (max-width: 700px) {
+  .stat-primary .currency-total-value {
+    font-size: 32px;
+  }
+  .stat-card:not(.stat-primary) .currency-total-value {
+    font-size: 17px;
+  }
+  .month-overview > .currency-total {
+    max-width: 100%;
+    text-align: left;
+  }
+  .month-overview .exchange-attribution {
+    justify-self: start;
+  }
+  .manual-rate-grid {
+    grid-template-columns: 1fr;
+  }
+  .logo-discovery-controls {
+    align-items: flex-start;
+    flex-direction: column;
+  }
+  .currency-total-value {
+    font-size: 25px;
+  }
+}
+
+/* Keep focused form controls at the size mobile Safari displays without auto-zoom. */
+@media (max-width: 700px), (pointer: coarse) {
+  .dialog-content input:not([type='checkbox']):not([type='radio']):not([type='color']),
+  .dialog-content select,
+  .dialog-content textarea {
+    font-size: 16px !important;
+  }
+}

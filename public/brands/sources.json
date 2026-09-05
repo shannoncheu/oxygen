@@ -113,6 +113,97 @@
       "source": "https://1password.com/press",
       "guidelines": "https://1password.com/press",
       "license": null
+    },
+    {
+      "id": "claude",
+      "name": "Claude",
+      "slug": "claude",
+      "source": "https://claude.ai",
+      "guidelines": null,
+      "license": null
+    },
+    {
+      "id": "gemini",
+      "name": "Google Gemini",
+      "slug": "googlegemini",
+      "source": "https://gemini.google.com",
+      "guidelines": null,
+      "license": null
+    },
+    {
+      "id": "perplexity",
+      "name": "Perplexity",
+      "slug": "perplexity",
+      "source": "https://www.perplexity.ai",
+      "guidelines": null,
+      "license": null
+    },
+    {
+      "id": "cursor",
+      "name": "Cursor",
+      "slug": "cursor",
+      "source": "https://cursor.com/brand",
+      "guidelines": null,
+      "license": null
+    },
+    {
+      "id": "github-copilot",
+      "name": "GitHub Copilot",
+      "slug": "githubcopilot",
+      "source": "https://primer.style/foundations/icons/copilot-24",
+      "guidelines": null,
+      "license": {
+        "type": "MIT",
+        "url": "https://spdx.org/licenses/MIT"
+      }
+    },
+    {
+      "id": "deepseek",
+      "name": "DeepSeek",
+      "slug": "deepseek",
+      "source": "https://www.deepseek.com",
+      "guidelines": null,
+      "license": null
+    },
+    {
+      "id": "hugging-face",
+      "name": "Hugging Face",
+      "slug": "huggingface",
+      "source": "https://huggingface.co/brand",
+      "guidelines": "https://huggingface.co/brand",
+      "license": null
+    },
+    {
+      "id": "v0",
+      "name": "v0",
+      "slug": "v0",
+      "source": "https://v0.dev",
+      "guidelines": null,
+      "license": null
+    },
+    {
+      "id": "replit",
+      "name": "Replit",
+      "slug": "replit",
+      "source": "https://repl.it",
+      "guidelines": null,
+      "license": null
+    },
+    {
+      "id": "suno",
+      "name": "Suno",
+      "slug": "suno",
+      "source": "https://suno.com",
+      "guidelines": null,
+      "license": null
+    },
+    {
+      "id": "elevenlabs",
+      "name": "ElevenLabs",
+      "slug": "elevenlabs",
+      "source": "https://elevenlabs.io/brand",
+      "guidelines": "https://elevenlabs.io/brand",
+      "license": null
     }
   ]
 }

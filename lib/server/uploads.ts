@@ -9,15 +9,21 @@ import type { BusinessData } from '../model';
 export const MAX_IMAGE_BYTES = 2 * 1024 * 1024;
 export const uploadDirectory = () =>
   path.resolve(process.env.UPLOAD_DIR || path.join(process.cwd(), '.data', 'uploads'));
-export async function assertUploadOwnership(tx: SQLExecutor, ownerId: string, data: BusinessData) {
-  const ids = [
+export function referencedUploadIds(data: BusinessData): string[] {
+  return [
     ...new Set(
-      [...data.subscriptions, ...data.bills]
-        .map((item) => item.logo)
+      [
+        ...data.subscriptions.map((item) => item.logo),
+        ...data.bills.map((item) => item.logo),
+        data.settings.avatarUrl || '',
+      ]
         .filter((value) => value.startsWith('/api/files/'))
         .map((value) => value.slice('/api/files/'.length)),
     ),
   ];
+}
+export async function assertUploadOwnership(tx: SQLExecutor, ownerId: string, data: BusinessData) {
+  const ids = referencedUploadIds(data);
   if (!ids.length) return;
   const { rows } = await tx.query(
     'SELECT id FROM uploads WHERE owner_id=$1 AND id=ANY($2::text[])',

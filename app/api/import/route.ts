@@ -42,6 +42,9 @@ export const POST = route(async (request) => {
       for (const item of [...backup.data.subscriptions, ...backup.data.bills]) {
         if (replacements.has(item.logo)) item.logo = replacements.get(item.logo)!;
       }
+      const avatarUrl = backup.data.settings.avatarUrl;
+      if (avatarUrl && replacements.has(avatarUrl))
+        backup.data.settings.avatarUrl = replacements.get(avatarUrl)!;
       backup.data.revision = existing.revision + 1;
       await writeBusiness(tx, account.id, backup.data);
       return backup.data;

@@ -19,6 +19,7 @@ import {
   snapshotBill,
   todayInTimezone,
 } from './billing';
+import { validateExchangeSettings, validateExchangeSnapshot } from './exchange';
 
 type RecordValue = Record<string, unknown>;
 const currencies = Object.keys(CURRENCY_DIGITS);
@@ -105,6 +106,16 @@ function website(value: unknown): string {
     if (!['http:', 'https:'].includes(url.protocol) || url.username || url.password)
       fail('服务网址必须使用 HTTP 或 HTTPS，且不能包含凭据');
   }
+  return result;
+}
+
+function avatarUrl(value: unknown): string {
+  const result = string(value === undefined ? '' : value, '头像图片', 100);
+  if (
+    result &&
+    !/^\/api\/files\/[a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12}$/.test(result)
+  )
+    fail('头像只能使用已上传的图片');
   return result;
 }
 
@@ -288,7 +299,20 @@ function allocationSchema(value: unknown): Allocation {
 }
 function settingsSchema(value: unknown): Settings {
   const p = object(value, '设置');
-  keys(p, ['timezone', 'displayCurrency', 'theme', 'categories', 'reminderDays'], '设置');
+  keys(
+    p,
+    [
+      'timezone',
+      'displayCurrency',
+      'theme',
+      'categories',
+      'reminderDays',
+      'avatarUrl',
+      'avatarSeed',
+      'exchange',
+    ],
+    '设置',
+  );
   const timezone = string(p.timezone, '时区', 100, true);
   try {
     new Intl.DateTimeFormat('en-US', { timeZone: timezone }).format();
@@ -309,6 +333,9 @@ function settingsSchema(value: unknown): Settings {
     theme: choice(p.theme, ['light', 'dark', 'system'], '主题'),
     categories,
     reminderDays: integer(p.reminderDays, '提醒天数', 0, 90),
+    avatarUrl: avatarUrl(p.avatarUrl),
+    avatarSeed: string(p.avatarSeed === undefined ? '' : p.avatarSeed, '头像种子', 160),
+    exchange: validateExchangeSettings(p.exchange),
   };
 }
 
@@ -860,6 +887,12 @@ export function applyAction(data: BusinessData, action: Action, today: string): 
     }
     case 'settings.save':
       draft.settings = settingsSchema({ ...draft.settings, ...p });
+      break;
+    case 'exchange.snapshot':
+      draft.settings.exchange = {
+        ...validateExchangeSettings(draft.settings.exchange),
+        snapshot: validateExchangeSnapshot(p),
+      };
       break;
     default:
       fail('不支持的操作');

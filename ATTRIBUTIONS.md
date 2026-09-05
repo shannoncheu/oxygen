@@ -16,11 +16,11 @@ Simple Icons 项目以 CC0 发布，但这不替代各品牌的商标权或独�
 
 另外三项直接来自官方页面公开使用的资源，未重画图形：
 
-| 服务 | 本地文件 | 官方来源 |
-| --- | --- | --- |
-| QQ音乐 | `qq-music.png` | [QQ音乐首页](https://y.qq.com/) 中的 [Logo PNG](https://y.qq.com/mediastyle/yqq/img/logo.png?max_age=2592000) |
-| 腾讯视频 | `tencent-video.svg` | [腾讯视频首页](https://v.qq.com/) 中的 [Logo SVG](https://vfiles.gtimg.cn/tvideo2/channel-vue/assets/logo-Ckf4UreJ.svg) |
-| 爱奇艺 | `iqiyi.png` | [官方 Logo 使用规范](https://www.iqiyi.com/common/biaozhiguifan.html) 中的 [PNG 资源包](https://static-s.iqiyi.com/ext/common/20200924-png/PNG-logo.zip)，使用线上标准色版本 |
+| 服务     | 本地文件            | 官方来源                                                                                                                                                                     |
+| -------- | ------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| QQ音乐   | `qq-music.png`      | [QQ音乐首页](https://y.qq.com/) 中的 [Logo PNG](https://y.qq.com/mediastyle/yqq/img/logo.png?max_age=2592000)                                                                |
+| 腾讯视频 | `tencent-video.svg` | [腾讯视频首页](https://v.qq.com/) 中的 [Logo SVG](https://vfiles.gtimg.cn/tvideo2/channel-vue/assets/logo-Ckf4UreJ.svg)                                                      |
+| 爱奇艺   | `iqiyi.png`         | [官方 Logo 使用规范](https://www.iqiyi.com/common/biaozhiguifan.html) 中的 [PNG 资源包](https://static-s.iqiyi.com/ext/common/20200924-png/PNG-logo.zip)，使用线上标准色版本 |
 
 QQ音乐、爱奇艺使用官方较宽的文字组合标识，保留原始资源和留白；其小尺寸显示密度低于独立品牌符号。
 
@@ -30,7 +30,15 @@ Microsoft 365、百度网盘、阿里云盘目前使用本项目制作的 M365 /
 
 当前 Simple Icons 没有这些产品图标；Microsoft 的[品牌规范](https://www.microsoft.com/en-us/legal/intellectualproperty/trademarks)要求产品图标另获授权，因此没有捆绑其图形。百度网盘、阿里云盘未找到适合本地分发的可核实资源，采用明确的文字替代。用户可在编辑订阅时上传自己可使用的图片覆盖。
 
-## 成员头像
+## AI 应用图标与在线查找
+
+新增 Claude、Gemini、Perplexity、Cursor、GitHub Copilot、DeepSeek、Hugging Face、v0、Replit、Suno、ElevenLabs，使用同一版本 Simple Icons 的原始矢量路径。来源、品牌规范和上游许可字段记录在 `public/brands/sources.json`；黑色图标使用中性灰，适配深色背景。
+
+ChatGPT 使用 [OpenAI 在 App Store 的官方应用](https://apps.apple.com/us/app/chatgpt/id6448311069)发布的 512 像素图标。通过 [Apple 官方查询接口](https://itunes.apple.com/lookup?id=6448311069&country=us)核对名称 `ChatGPT` 与发行方 `OpenAI OpCo, LLC` 后下载，转换为本地 PNG。图标权利归 OpenAI 所有。
+
+内置目录之外的名称通过 [Apple iTunes Search API](https://developer.apple.com/library/archive/documentation/AudioVideo/Conceptual/iTuneSearchAPI/Searching.html)查找 App Store 图标，会向 Apple 发送查询名称；返回结果标明商店和发行方，名称不明确时要求提供官网。输入官网时，服务器读取该站点公开声明的 favicon 或 touch icon。两种查找都无需 API Key，得到的图片转换为静态 PNG 后保存在本机上传目录。在线图片不属于预先捆绑的品牌资源，使用权取决于对应权利人。
+
+## 默认成员头像
 
 统一使用 DiceBear **Thumbs**，`@dicebear/core` 和 `@dicebear/thumbs` 都锁定 **9.4.2**。头像在项目内部由持久化 seed 生成，不发送昵称、邮箱或 seed 到外部服务。
 

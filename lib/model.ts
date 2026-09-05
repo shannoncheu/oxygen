@@ -1,3 +1,5 @@
+import type { ExchangeSettings } from './exchange';
+
 export type Currency = 'CNY' | 'USD' | 'EUR' | 'GBP' | 'HKD' | 'TWD' | 'JPY' | 'KRW' | 'KWD';
 export type CycleUnit = 'day' | 'week' | 'month' | 'year';
 export type SubscriptionStatus = 'active' | 'trial' | 'paused' | 'cancelled' | 'archived';
@@ -85,6 +87,9 @@ export interface Settings {
   theme: 'light' | 'dark' | 'system';
   categories: string[];
   reminderDays: number;
+  avatarUrl?: string;
+  avatarSeed?: string;
+  exchange?: ExchangeSettings;
 }
 export interface BusinessData {
   settings: Settings;
@@ -105,8 +110,11 @@ export const defaultSettings: Settings = {
   timezone: 'Asia/Shanghai',
   displayCurrency: 'CNY',
   theme: 'system',
-  categories: ['音乐', '视频', '效率', '云存储', '学习', '其他'],
+  categories: ['AI', '音乐', '视频', '效率', '云存储', '学习', '其他'],
   reminderDays: 7,
+  avatarUrl: '',
+  avatarSeed: '',
+  exchange: { autoUpdate: true, snapshot: null, manualRates: {} },
 };
 export const emptyData = (): BusinessData => ({
   settings: structuredClone(defaultSettings),

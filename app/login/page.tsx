@@ -87,7 +87,7 @@ export default function Login() {
             <LockKeyhole size={24} />
           </span>
           <h2>欢迎回来</h2>
-          <p className="muted">登录你的私人订阅空间</p>
+          <p className="muted">登录 oxygen</p>
           <label>
             账号
             <input
@@ -139,7 +139,7 @@ export default function Login() {
             )}
           </button>
           <p className="login-help">
-            私人站点，未开放注册。
+            未开放注册。
             <br />
             首次使用或忘记密码？请在服务器运行管理员命令。
           </p>

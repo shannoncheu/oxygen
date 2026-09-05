@@ -1,5 +1,5 @@
 'use client';
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import {
   LockKeyhole,
   Sun,
@@ -20,7 +20,9 @@ import {
 import type { Settings as SettingsType } from '@/lib/model';
 import { currencies, DataProps, Field, Modal, Notice, SubmitBar } from './shared';
 import { AccountAvatar } from './account-avatar';
-import { Brand } from './brand';
+import { AvatarSettings } from './avatar-settings';
+import { ExchangeSettings } from './exchange-settings';
+import { defaultExchangeSettings } from '@/lib/exchange';
 async function post(path: string, body: any) {
   const r = await fetch(path, {
     method: 'POST',
@@ -51,6 +53,21 @@ export default function Settings({
     [backup, setBackup] = useState<any>(null),
     [preview, setPreview] = useState<any>(null),
     [confirm, setConfirm] = useState('');
+  useEffect(() => {
+    setS((previous) => ({
+      ...previous,
+      avatarUrl: data.settings.avatarUrl,
+      avatarSeed: data.settings.avatarSeed,
+      exchange: {
+        ...(previous.exchange || defaultExchangeSettings()),
+        snapshot: data.settings.exchange?.snapshot || null,
+      },
+    }));
+  }, [
+    data.settings.avatarUrl,
+    data.settings.avatarSeed,
+    data.settings.exchange?.snapshot?.fetchedAt,
+  ]);
   function edit(key: keyof SettingsType, value: any) {
     setS({ ...s, [key]: value });
     setSuccess('');
@@ -147,11 +164,11 @@ export default function Settings({
           </div>
           <div className="setting-row">
             <div>
-              <strong>默认显示货币</strong>
-              <p>用于新订阅与统计选择；不同币种不会自动换算</p>
+              <strong>总额显示货币</strong>
+              <p>所有订阅折算成这个币种，单笔金额保留原币种</p>
             </div>
             <select
-              aria-label="默认显示货币"
+              aria-label="总额显示货币"
               value={s.displayCurrency}
               onChange={(e) => edit('displayCurrency', e.target.value)}
             >
@@ -191,6 +208,18 @@ export default function Settings({
             </datalist>
           </div>
         </section>
+        <ExchangeSettings
+          value={s.exchange || defaultExchangeSettings()}
+          onChange={(value) => edit('exchange', value)}
+          onRefresh={async () => {
+            const response = await fetch('/api/exchange');
+            const result = await response.json();
+            if (!response.ok || result.error || !result.snapshot)
+              throw new Error(result.error || '汇率暂不可用，可手动填写。');
+            await act('exchange.snapshot', result.snapshot);
+            return result.snapshot;
+          }}
+        />
         <section className="panel settings-panel">
           <h2>
             <Folder size={19} />
@@ -289,13 +318,26 @@ export default function Settings({
             账号与安全
           </h2>
           <div className="account-card">
-            <AccountAvatar username={username} size={48} />
+            <AccountAvatar
+              username={username}
+              size={48}
+              avatarUrl={data.settings.avatarUrl}
+              avatarSeed={data.settings.avatarSeed}
+            />
             <div>
               <strong>{username}</strong>
               <small>站点管理员</small>
             </div>
             <ShieldCheck size={20} />
           </div>
+          <AvatarSettings
+            username={username}
+            settings={data.settings}
+            onSave={async (patch) => {
+              await act('settings.save', patch);
+              setS((previous) => ({ ...previous, ...patch }));
+            }}
+          />
           <button className="button full-width" onClick={() => setPassword(true)}>
             修改密码
           </button>
@@ -341,11 +383,6 @@ export default function Settings({
           <p className="muted small">
             先校验和预览，再由你确认覆盖。服务器完整备份请使用随项目提供的备份脚本。
           </p>
-        </section>
-        <section className="settings-about">
-          <Brand />
-          <p>你的私人订阅管家 · 1.0.0</p>
-          <p>本地头像与品牌资源，无需外部 API Key。</p>
         </section>
       </div>
       {password && <PasswordDialog onClose={() => setPassword(false)} />}{' '}

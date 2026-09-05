@@ -7,6 +7,7 @@ import {
   cloneElement,
   isValidElement,
   useId,
+  useRef,
   type ReactNode,
   type ReactElement,
 } from 'react';
@@ -160,13 +161,21 @@ export function Modal({
   children: ReactNode;
   wide?: boolean;
 }) {
+  const content = useRef<HTMLDivElement>(null);
   return (
     <Dialog.Root open={open} onOpenChange={(v) => !v && onClose()}>
       <Dialog.Portal>
         <Dialog.Overlay className="dialog-overlay" />
         <Dialog.Content
+          ref={content}
           className={`dialog-content ${wide ? 'wide' : ''}`}
           aria-describedby={description ? 'dialog-description' : undefined}
+          onOpenAutoFocus={(event) => {
+            if (window.matchMedia('(max-width: 700px), (pointer: coarse)').matches) {
+              event.preventDefault();
+              content.current?.focus({ preventScroll: true });
+            }
+          }}
         >
           <div className="dialog-handle" />
           <div className="dialog-heading">
