@@ -163,7 +163,12 @@ button {
   color: var(--ink);
 }
 .wordmark-name {
-  padding-bottom: 2px;
+  display: block;
+  flex-shrink: 0;
+}
+.oxygen-wordmark {
+  display: block;
+  overflow: visible;
 }
 .brand-mark {
   color: var(--accent);

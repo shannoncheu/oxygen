@@ -17,12 +17,15 @@ type Database = SQLExecutor & {
   close(): Promise<void>;
 };
 // Convert positional parameters into Drizzle bound values (never interpolated text).
-function statement(text: string, parameters: unknown[] = []): SQL {
+export function statement(text: string, parameters: unknown[] = []): SQL {
   const chunks: SQL[] = [];
   let last = 0;
   for (const match of text.matchAll(/\$(\d+)/g)) {
     chunks.push(drizzleSQL.raw(text.slice(last, match.index)));
-    chunks.push(drizzleSQL`${parameters[Number(match[1]) - 1]}`);
+    // A bare array in a Drizzle template becomes a SQL list, not a PostgreSQL
+    // array parameter. Bind every value explicitly so ANY($n::text[]) receives
+    // the original array, including empty arrays and single-image avatars.
+    chunks.push(drizzleSQL`${drizzleSQL.param(parameters[Number(match[1]) - 1])}`);
     last = match.index! + match[0].length;
   }
   chunks.push(drizzleSQL.raw(text.slice(last)));
@@ -92,9 +95,11 @@ async function connect(): Promise<Database> {
       rows: (await orm.execute(statement(sql, parameters))).rows as T[],
     }),
     transaction: async (fn) =>
-      pg.transaction(async (tx) =>
+      orm.transaction(async (tx) =>
         fn({
-          query: async <T>(sql: string, parameters?: unknown[]) => tx.query<T>(sql, parameters),
+          query: async <T>(sql: string, parameters?: unknown[]) => ({
+            rows: (await tx.execute(statement(sql, parameters))).rows as T[],
+          }),
         }),
       ),
   };

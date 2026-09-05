@@ -87,7 +87,7 @@ export default function Login() {
             <LockKeyhole size={24} />
           </span>
           <h2>欢迎回来</h2>
-          <p className="muted">登录 oxygen</p>
+          <p className="muted">登录 Oxygen</p>
           <label>
             账号
             <input

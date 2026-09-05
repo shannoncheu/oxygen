@@ -94,7 +94,8 @@ test('custom account avatar, AI discovery, converted totals, and mobile editing'
     }
     await page.setViewportSize({ width: 1440, height: 1040 });
     await page.goto('/');
-    await expect(page).toHaveTitle('oxygen');
+    await expect(page).toHaveTitle('Oxygen');
+    await expect(page.getByRole('link', { name: 'Oxygen 首页' })).toBeVisible();
     const oldMarketing = /私人订阅管理|你的私人订阅管家|本地头像与品牌资源|安心的私人空间/;
     await expect(page.locator('body')).not.toContainText(oldMarketing);
     const icons = await page

@@ -1,7 +1,7 @@
 import type { Metadata } from 'next';
 import './globals.css';
 export const metadata: Metadata = {
-  title: 'oxygen',
+  title: 'Oxygen',
   robots: { index: false, follow: false },
 };
 export const viewport = { width: 'device-width', initialScale: 1, viewportFit: 'cover' };

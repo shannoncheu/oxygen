@@ -64,8 +64,12 @@ export async function normalizeImage(input: Buffer): Promise<Buffer> {
 export async function saveUpload(ownerId: string, png: Buffer, executor?: SQLExecutor) {
   const id = randomUUID(),
     filename = id + '.png';
-  await mkdir(uploadDirectory(), { recursive: true });
-  await writeFile(imagePath(filename), png, { flag: 'wx', mode: 0o600 });
+  try {
+    await mkdir(uploadDirectory(), { recursive: true });
+    await writeFile(imagePath(filename), png, { flag: 'wx', mode: 0o600 });
+  } catch (error) {
+    throw uploadError(error, 'storage');
+  }
   try {
     await (executor ? executor.query.bind(executor) : query)(
       'INSERT INTO uploads(id,owner_id,filename) VALUES($1,$2,$3)',
@@ -73,9 +77,33 @@ export async function saveUpload(ownerId: string, png: Buffer, executor?: SQLExe
     );
   } catch (error) {
     await unlink(imagePath(filename)).catch(() => {});
-    throw error;
+    throw uploadError(error, 'database');
   }
   return { id, url: '/api/files/' + id, filename };
+}
+
+function uploadError(error: unknown, stage: 'storage' | 'database'): APIError {
+  // Keep database statements, credentials, paths and image data out of responses/logs.
+  let current = error;
+  let code = 'UNKNOWN';
+  for (let depth = 0; depth < 4 && current && typeof current === 'object'; depth++) {
+    const entry = current as { code?: unknown; cause?: unknown };
+    if (typeof entry.code === 'string' && /^[A-Z0-9_]{1,32}$/.test(entry.code)) {
+      code = entry.code;
+      break;
+    }
+    current = entry.cause;
+  }
+  console.error('Upload failed:', { stage, code });
+  if (stage === 'database')
+    return new APIError(503, '图片记录保存失败，请稍后重试；持续失败时请检查服务器数据库日志。');
+  if (['EACCES', 'EPERM', 'EROFS'].includes(code))
+    return new APIError(503, '图片无法保存：服务器上传目录不可写。请检查上传目录权限后重试。');
+  if (['ENOSPC', 'EDQUOT'].includes(code))
+    return new APIError(507, '图片无法保存：服务器存储空间不足。请清理空间后重试。');
+  if (['EEXIST', 'ENOTDIR', 'ENOENT'].includes(code))
+    return new APIError(503, '图片无法保存：服务器上传目录配置异常。请检查上传目录后重试。');
+  return new APIError(503, '图片存储暂不可用，请稍后重试；持续失败时请检查服务器上传日志。');
 }
 export async function readUpload(ownerId: string, id: string) {
   if (!/^[a-f0-9-]{36}$/.test(id)) throw new APIError(404, '图片不存在。');
