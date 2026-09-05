@@ -116,7 +116,7 @@ docker compose up -d --build --wait --wait-timeout 240
 
 保留原有 `.env` 和 Docker 数据卷。应用启动时会执行数据库迁移，不需要重新创建账号。已有部署继续使用原目录即可，仓库改名不要求搬动文件或修改 Compose 项目名。
 
-如果按后文移除了 Caddy 服务，将更新命令中的 `docker compose pull db caddy` 改为 `docker compose pull db`。
+使用下文的 Nginx 部署方式时，将更新命令中的 `docker compose pull db caddy` 改为 `docker compose pull db`。
 
 不要运行 `docker compose down -v`，它会删除数据卷。数据库当前使用 PostgreSQL 17，升级应用时不要自行修改数据库镜像的大版本号。
 
@@ -159,20 +159,59 @@ docker compose exec app pnpm admin reset
 
 ## 已有反向代理
 
-如果服务器已经用 Nginx 或 Caddy 管理网站，可以编辑 `compose.yaml`，移除其中的整个 `caddy` 服务，并在 `app` 服务下添加端口映射。下面的方式适用于直接运行在宿主机上的反向代理：
+下面适用于直接安装在 Ubuntu 上的 Nginx。先确认 Docker 正常运行，再从项目目录启动：
 
-```yaml
-    ports:
-      - "127.0.0.1:3000:3000"
+```bash
+sudo systemctl enable --now docker
+sudo docker info
+cd /opt/oxygen
+git pull --ff-only
+sudo bash scripts/deploy.sh --nginx
 ```
 
-让现有反向代理转发到 `127.0.0.1:3000`，由它配置域名和 HTTPS。`.env` 中的 `DOMAIN` 填这个域名，Compose 会据此设置 `APP_URL`。
+脚本只启动应用和数据库，应用监听 `127.0.0.1:3000`。已有 `.env` 中的域名和数据库密码会保留；模式写入 `.env`，之后的备份、恢复、账号管理命令照常使用。若此前运行过本项目的 Caddy，脚本会在应用启动成功后停止它。
 
-如果反向代理也运行在 Docker 容器里，需要把它与应用接入同一个 Docker 网络，再通过应用的服务名访问；不要填写代理容器自己的 `127.0.0.1`。
+按提示创建管理员，然后配置 Nginx。以下命令使用 root 执行，把 `oxygen.example.com` 换成自己的域名。如果该域名已经有站点配置，请编辑现有文件，不要重复创建。
 
-代理需要正确设置 `X-Forwarded-Proto`，并覆盖客户端传入的 `X-Forwarded-For`。不要缓存本站页面或 API。应用端口 3000 只监听回环地址，数据库端口 5432 不对公网开放。
+```bash
+cd /opt/oxygen
+site_domain=oxygen.example.com
+sed "s/oxygen.example.com/$site_domain/g" deploy/nginx.conf.example \
+  > "/etc/nginx/sites-available/$site_domain"
+ln -s "/etc/nginx/sites-available/$site_domain" "/etc/nginx/sites-enabled/$site_domain"
+nginx -t && systemctl reload nginx
+```
+
+模板将请求转发到应用，设置必要的请求头，并允许备份文件上传。已有 HTTPS 站点可以将模板里的 `location /` 配置放进自己的 HTTPS `server` 块，替换原有的同名 `location`，同时设置 `client_max_body_size 60m`。证书配置继续使用原来的。
+
+新站点可以使用 Certbot 申请证书：
+
+```bash
+apt update
+apt install -y certbot python3-certbot-nginx
+certbot --nginx -d oxygen.example.com --redirect
+systemctl enable --now certbot.timer
+certbot renew --dry-run
+```
+
+证书签发需要域名正确解析，并允许访问 80/443。按照 Certbot 提示填写邮箱并确认服务条款，完成后通过 HTTPS 域名登录。生产环境的登录 Cookie 只在 HTTPS 下生效，HTTP 页面可用于检查连通性，但不能正常保持登录。
+
+排查应用和 Nginx 的连接时，可以运行 `curl -I http://127.0.0.1:3000/login`，正常应返回 HTTP 200。不要在安全组开放 3000 或 5432。
+
+如果 Nginx 运行在另一个 Docker 容器里，需要将它与应用接入同一个 Docker 网络，通过应用的服务名访问；不能使用代理容器自己的 `127.0.0.1`。有 CDN 时也不要缓存本站页面或 API。
 
 ## 常见问题
+
+### Cannot connect to the Docker daemon
+
+这是 Docker 服务未启动，或当前账号无法访问 Docker，与使用哪种反向代理无关。Ubuntu 上先运行：
+
+```bash
+sudo systemctl enable --now docker
+sudo docker info
+```
+
+如果启动失败，运行 `sudo journalctl -u docker -n 60 --no-pager` 查看原因。若只有加 `sudo` 才能访问 Docker，部署脚本也使用 `sudo bash scripts/deploy.sh`；Nginx 模式则加上 `--nginx`。
 
 ### 域名打不开或证书申请失败
 
@@ -181,6 +220,8 @@ docker compose exec app pnpm admin reset
 ```bash
 docker compose logs --tail=100 caddy
 ```
+
+Nginx 部署查看 `sudo journalctl -u nginx -n 60 --no-pager`，以及 `docker compose logs --tail=100 app db`。
 
 ### 登录后又回到登录页
 

@@ -1,0 +1,18 @@
+# Selected by scripts/deploy.sh --nginx through COMPOSE_FILE in .env.
+# Keep the project and volume names shared with the default deployment.
+name: renew
+services:
+  db:
+    extends:
+      file: compose.yaml
+      service: db
+  app:
+    extends:
+      file: compose.yaml
+      service: app
+    ports:
+      - "127.0.0.1:3000:3000"
+
+volumes:
+  database:
+  uploads:
