@@ -119,17 +119,11 @@
   font-size: 11px;
   color: var(--muted);
 }
-.user-initial {
-  height: 36px;
-  width: 36px;
-  flex-shrink: 0;
-  border-radius: 12px;
-  background: #e9e3dc;
-  color: #8e7b60;
-  display: grid;
-  place-items: center;
-  font-size: 15px;
-  font-weight: 700;
+.sidebar-account .avatar,
+.account-card .avatar {
+  display: block;
+  border: 2px solid var(--panel);
+  box-shadow: 0 0 0 1px var(--line);
 }
 .app-main {
   margin-left: 232px;
@@ -1779,16 +1773,6 @@
   gap: 12px;
   margin: 0 0 25px;
 }
-.account-card > span {
-  width: 42px;
-  height: 42px;
-  border-radius: 14px;
-  background: var(--accent-soft);
-  display: grid;
-  place-items: center;
-  color: var(--accent);
-  font-weight: 650;
-}
 .account-card > div {
   flex: 1;
 }
@@ -1841,14 +1825,9 @@
   color: #9b9ca8;
   padding: 15px;
 }
-.settings-about strong {
-  font-size: 18px;
-}
-.settings-about strong span {
-  font-size: 9px;
-  letter-spacing: 2px;
-  margin-left: 6px;
-  font-weight: 400;
+.settings-about .wordmark {
+  margin: 0 auto;
+  font-size: 23px;
 }
 .settings-about p {
   font-size: 10px;
@@ -1973,10 +1952,6 @@
   border-color: #3d5447 !important;
   color: #a4d2b6 !important;
 }
-[data-theme='dark'] .user-initial {
-  background: #494139;
-  color: #d3bd9c;
-}
 @media (min-width: 1440px) {
   .app-main {
     padding-left: 45px;
@@ -2004,9 +1979,6 @@
   .sidebar {
     width: 195px;
     padding: 30px 17px;
-  }
-  .sidebar .wordmark-en {
-    display: none;
   }
   .app-main {
     margin-left: 195px;
@@ -2087,7 +2059,8 @@
   .sidebar nav span,
   .sidebar nav small,
   .private-note,
-  .sidebar-account > span:not(.user-initial),
+  .sidebar .wordmark-name,
+  .sidebar-account-details,
   .sidebar-account > svg {
     display: none;
   }
@@ -2105,9 +2078,6 @@
   .app-main {
     margin-left: 84px;
     padding: 28px 24px;
-  }
-  .sidebar .wordmark-en {
-    display: none;
   }
   .family-detail-columns {
     grid-template-columns: 1fr;

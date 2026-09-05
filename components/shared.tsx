@@ -1,6 +1,7 @@
 'use client';
 import * as Dialog from '@radix-ui/react-dialog';
-import { X, Plus, Layers3 } from 'lucide-react';
+import { X, Plus } from 'lucide-react';
+import { OxygenMark } from './brand';
 import {
   Children,
   cloneElement,
@@ -199,7 +200,7 @@ export function Empty({
   return (
     <div className="empty">
       <span className="empty-icon">
-        <Layers3 size={30} />
+        <OxygenMark size={34} />
       </span>
       <h3>{title}</h3>
       <p>{description}</p>

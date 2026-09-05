@@ -1,7 +1,6 @@
 'use client';
 import { useCallback, useEffect, useRef, useState } from 'react';
 import {
-  Layers3,
   LayoutGrid,
   ChartNoAxesCombined,
   Users,
@@ -19,6 +18,8 @@ import { BillRow, SubscriptionView, SubscriptionDetail, SubscriptionEditor } fro
 import Families from './families';
 import Statistics from './statistics';
 import Settings from './settings';
+import { Brand } from './brand';
+import { AccountAvatar } from './account-avatar';
 const tabs = [
   { id: 'subscriptions', label: '订阅', icon: LayoutGrid, title: '我的订阅' },
   { id: 'statistics', label: '统计', icon: ChartNoAxesCombined, title: '支出统计' },
@@ -126,12 +127,7 @@ export default function Dashboard({ username }: { username: string }) {
   return (
     <div className="app-shell">
       <aside className="sidebar">
-        <a className="wordmark" href="/">
-          <span className="brand-mark">
-            <Layers3 size={24} />
-          </span>
-          续订<span className="wordmark-en">RENEW</span>
-        </a>
+        <Brand />
         <span className="sidebar-label">个人空间</span>
         <nav>
           {tabs.map((t) => (
@@ -156,9 +152,13 @@ export default function Dashboard({ username }: { username: string }) {
               <span>数据存储在你的服务器</span>
             </div>
           </div>
-          <button className="sidebar-account" onClick={() => navigate('settings')}>
-            <span className="user-initial">{username.slice(0, 1).toUpperCase()}</span>
-            <span>
+          <button
+            className="sidebar-account"
+            onClick={() => navigate('settings')}
+            aria-label={`${username} 的账号设置`}
+          >
+            <AccountAvatar username={username} size={40} />
+            <span className="sidebar-account-details">
               <strong>{username}</strong>
               <small>管理员</small>
             </span>
@@ -228,7 +228,7 @@ export default function Dashboard({ username }: { username: string }) {
           </section>
         )}
         <footer className="app-footer">
-          <span>续订 · 把每一份订阅照顾好</span>
+          <span>oxygen · 私人订阅管理</span>
           <span className="sync-indicator">
             <i />
             {lastSync ? `${lastSync} 已同步` : '连接中'}

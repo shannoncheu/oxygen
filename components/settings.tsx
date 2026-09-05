@@ -19,6 +19,8 @@ import {
 } from 'lucide-react';
 import type { Settings as SettingsType } from '@/lib/model';
 import { currencies, DataProps, Field, Modal, Notice, SubmitBar } from './shared';
+import { AccountAvatar } from './account-avatar';
+import { Brand } from './brand';
 async function post(path: string, body: any) {
   const r = await fetch(path, {
     method: 'POST',
@@ -287,7 +289,7 @@ export default function Settings({
             账号与安全
           </h2>
           <div className="account-card">
-            <span>{username.slice(0, 1).toUpperCase()}</span>
+            <AccountAvatar username={username} size={48} />
             <div>
               <strong>{username}</strong>
               <small>站点管理员</small>
@@ -341,9 +343,7 @@ export default function Settings({
           </p>
         </section>
         <section className="settings-about">
-          <strong>
-            续订 <span>RENEW</span>
-          </strong>
+          <Brand />
           <p>你的私人订阅管家 · 1.0.0</p>
           <p>本地头像与品牌资源，无需外部 API Key。</p>
         </section>

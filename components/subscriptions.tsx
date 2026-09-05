@@ -381,7 +381,7 @@ export function SubscriptionView({ data, act, today, openSubscription }: DataPro
           <p className="aside-note">
             所有金额按原币种分别显示。
             <br />
-            续订只记账，不会代你扣款。
+            仅记录费用，不会自动扣款。
           </p>
         </aside>
       </div>

@@ -4,11 +4,12 @@ import {
   ArrowRight,
   Eye,
   EyeOff,
-  Layers3,
+  Users,
   LockKeyhole,
   ShieldCheck,
   LoaderCircle,
 } from 'lucide-react';
+import { Brand } from '@/components/brand';
 export default function Login() {
   const [show, setShow] = useState(false),
     [error, setError] = useState(''),
@@ -40,12 +41,7 @@ export default function Login() {
   return (
     <main className="login-page">
       <section className="login-story">
-        <a className="wordmark" href="/login">
-          <span className="brand-mark">
-            <Layers3 size={24} />
-          </span>
-          续订<span className="wordmark-en">RENEW</span>
-        </a>
+        <Brand href="/login" />
         <div className="story-copy">
           <span className="eyebrow">A LITTLE MORE IN CONTROL</span>
           <h1>
@@ -61,7 +57,7 @@ export default function Login() {
           <div className="story-art" aria-hidden="true">
             <div className="art-card art-back">
               <span>FAMILY PLAN</span>
-              <Layers3 size={32} />
+              <Users size={32} />
               <strong>一起分享，轻松管理</strong>
               <div className="art-dots">
                 <i />

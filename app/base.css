@@ -152,28 +152,33 @@ button {
   color: var(--muted);
 }
 .wordmark {
-  font-size: 23px;
-  font-weight: 750;
+  font-size: 28px;
+  font-weight: 650;
   display: flex;
   gap: 10px;
   align-items: center;
-  letter-spacing: -1px;
+  letter-spacing: -1.2px;
+  line-height: 1;
+  width: fit-content;
+  color: var(--ink);
 }
-.wordmark-en {
-  font-size: 10px;
-  font-weight: 600;
-  letter-spacing: 2px;
-  color: var(--muted);
-  padding-top: 6px;
+.wordmark-name {
+  padding-bottom: 2px;
 }
 .brand-mark {
-  background: var(--accent);
-  color: #fff;
-  border-radius: 13px;
+  color: var(--accent);
   height: 42px;
   width: 42px;
+  flex: 0 0 42px;
   display: grid;
   place-items: center;
+}
+.oxygen-mark {
+  display: block;
+  flex-shrink: 0;
+}
+.oxygen-bubble {
+  color: #76aa93;
 }
 .login-page {
   min-height: 100dvh;

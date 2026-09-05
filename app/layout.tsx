@@ -1,7 +1,7 @@
 import type { Metadata } from 'next';
 import './globals.css';
 export const metadata: Metadata = {
-  title: '续订 · 私人订阅管家',
+  title: 'oxygen · 私人订阅管理',
   description: '订阅、账期与家庭共享，一个地方安心管理。',
   robots: { index: false, follow: false },
 };
