@@ -1,105 +1,218 @@
-# 续订 · Renew
+# oxygen
 
-一个可以部署到自己服务器的私人订阅追踪工具。订阅、家庭组、成员和账期保存在服务端；手机和电脑登录同一站点读取同一份数据。正式账号从空数据开始，关闭公开注册，没有默认管理员密码。
+部署在自己服务器上的订阅管理工具。记录订阅价格和续费日期，查看每月开销，也可以管理家庭组成员、分摊费用和交费情况。手机和电脑登录同一个网站，数据保存在自己的数据库里。
 
-**日常使用不需要任何第三方 API Key，也不需要邮箱、短信、付费云平台、Spotify 开发者账号或 Logo API。** 家庭组用于记录成员与费用分摊，不代扣费、不自动加入第三方家庭套餐，不收集第三方服务密码。
+- 订阅管理：月付、年付、自定义周期、试用、暂停和归档。
+- 费用统计：月度支出、续费日历、不同币种分别汇总。
+- 家庭组：成员、席位、均摊或自定义分摊，按账期记录交费。
+- 数据导出：JSON 备份与恢复、CSV 表格、ICS 日历。
+- 单管理员账号，关闭公开注册，没有默认密码。
 
-## 最短部署路线
+## 部署
 
-准备一台 Linux 服务器和一个域名。建议 Ubuntu 24.04 / Debian 12、2 核 CPU、至少 2 GB 内存；在本机执行 Next.js 构建时建议 4 GB，低内存机器可先在其他机器构建镜像。服务器须能下载 Docker 镜像和 npm 依赖。
+下面以一台新的 **Ubuntu 24.04** 服务器为例，使用 Docker Compose 部署。建议 2 核 CPU、4 GB 内存，首次安装会在服务器上构建应用。服务器需要能访问 GitHub、Docker 镜像源和 npm。
 
-1. 在域名服务商处添加 A 记录，例如 `sub.example.com → 服务器公网 IPv4`。仅在服务器已配置 IPv6 时添加 AAAA 记录。
-2. 安装 Docker Engine 与 Compose 插件：[Ubuntu 官方步骤](https://docs.docker.com/engine/install/ubuntu/)、[Debian 官方步骤](https://docs.docker.com/engine/install/debian/)。不需要单独安装 Node.js、PostgreSQL 或 Nginx。
-3. 在服务器安全组及防火墙放行 TCP 80、TCP 443；UDP 443 可选，用于 HTTP/3。已有 Nginx 或 Caddy 占用这些端口时，先参见后文“已有反向代理”。
-4. 从 GitHub 下载源码，或上传并解压完整项目到例如 `/opt/renew`。使用 Git 下载：
+只需要服务器和域名。不用另外购买数据库，也不用安装 Node.js、PostgreSQL 或 Nginx；数据库和 HTTPS 服务都在 Compose 里。
+
+### 1. 解析域名
+
+在域名服务商的 DNS 控制台添加一条 A 记录。例如，要用 `sub.example.com` 访问：
+
+| 类型 | 主机记录 | 记录值 |
+| --- | --- | --- |
+| A | sub | 服务器的公网 IPv4 地址 |
+
+没有配置 IPv6 就不要添加 AAAA 记录。首次部署建议先关闭 CDN 代理，让域名直接指向服务器。
+
+在服务器厂商的安全组中放行 **TCP 80、TCP 443**，系统防火墙也要允许这两个端口。保留现有 SSH 端口；UDP 443 可选，用于 HTTP/3。默认配置由 Caddy 占用 80 和 443，已有网站的服务器请先看[已有反向代理](#已有反向代理)。
+
+### 2. 安装 Docker
+
+通过 SSH 登录服务器。以下部署和维护命令使用 root 执行；如果登录的是普通账号，先运行 `sudo -i`。
+
+已安装 Docker Engine 和 Compose 插件的服务器可以跳过安装，用 `docker compose version` 确认即可。新的 Ubuntu 24.04 服务器按下面的命令安装，使用的是 [Docker 官方软件源](https://docs.docker.com/engine/install/ubuntu/#install-using-the-apt-repository)：
 
 ```bash
-git clone https://github.com/shannoncheu/renew-subscription-tracker.git renew
-cd renew
+apt update
+apt install -y ca-certificates curl git
+install -m 0755 -d /etc/apt/keyrings
+curl -fsSL https://download.docker.com/linux/ubuntu/gpg -o /etc/apt/keyrings/docker.asc
+chmod a+r /etc/apt/keyrings/docker.asc
+
+cat > /etc/apt/sources.list.d/docker.sources <<EOF
+Types: deb
+URIs: https://download.docker.com/linux/ubuntu
+Suites: noble
+Components: stable
+Architectures: $(dpkg --print-architecture)
+Signed-By: /etc/apt/keyrings/docker.asc
+EOF
+
+apt update
+apt install -y docker-ce docker-ce-cli containerd.io docker-buildx-plugin docker-compose-plugin
+systemctl enable --now docker
+docker compose version
 ```
 
-进入项目目录后运行：
+其他系统请按对应教程安装 Docker，例如 [Debian](https://docs.docker.com/engine/install/debian/)。上面的软件源配置只适用于 Ubuntu 24.04。
+
+### 3. 下载并启动
+
+如果前面跳过了安装步骤，请先确认服务器有 Git。Ubuntu 可以运行 `apt update && apt install -y git`。
 
 ```bash
+mkdir -p /opt
+cd /opt
+git clone https://github.com/shannoncheu/oxygen.git
+cd oxygen
 bash scripts/deploy.sh
 ```
 
-脚本询问域名，自动生成数据库强密码并保存到仅当前用户可读的 `.env`，构建并启动 PostgreSQL、应用和 Caddy。首次选择创建管理员，按提示设置账号和密码；密码通过终端隐藏输入，不放在命令参数中。已存在管理员时无需再次创建。
+按提示操作：
 
-打开 `https://sub.example.com` 登录。Caddy 会自动申请和续期 HTTPS 证书。首次启动需要等待镜像下载、构建和证书签发。
+1. 输入已经解析好的域名，例如 `sub.example.com`，不要带 `https://`、端口或路径。
+2. 等待镜像下载和应用构建。脚本会生成数据库密码，写入 `.env`，然后启动数据库、应用和 Caddy。
+3. 出现“现在创建管理员？”时按回车，设置账号和密码。密码至少 12 个字符，输入时不会显示。
 
-```bash
-docker compose ps
-docker compose logs --tail=100 app caddy
-```
+完成后在浏览器打开 `https://sub.example.com`，使用刚创建的账号登录。Caddy 会自动申请和续期 HTTPS 证书，不需要手动上传证书。
 
-## 到底需要哪些 API 或外部服务
-
-| 项目 | 是否需要 | 说明 |
-| --- | --- | --- |
-| 订阅平台 API | 不需要 | 名称、价格、套餐及续费日期由用户确认和记录，不冒充实时价格 |
-| 邮箱、短信、OAuth | 不需要 | 服务器命令创建/重置管理员，本站账号密码登录 |
-| 头像、Logo API | 不需要 | DiceBear 在本地生成头像，品牌资源随项目提供 |
-| 数据库 SaaS | 不需要 | PostgreSQL 在自己的 Docker 容器内运行 |
-| 汇率 API | 不需要 | 不同币种分别汇总，不虚构汇率 |
-| HTTPS 证书机构 ACME | 自动使用、无需 Key | Caddy 需要访问证书机构并接受域名验证，默认配置无需 DNS API 令牌 |
-| Docker / npm 下载源 | 安装、升级时需要 | 下载开源依赖和基础镜像；日常业务读取不依赖它们 |
-
-提醒是**站内提醒**，需要打开网站才能看见。`.ics` 可导入自己的日历；导出的日历是当时的快照，不是自动更新的订阅地址。邮件通知、浏览器推送、真实收款、第三方平台同步、家庭成员登录没有实现。
-
-## 初始化、密码恢复与升级
-
-首次管理员初始化只能在服务器终端执行，公开网页没有抢注入口：
+第一次登录没有示例数据，可以直接添加自己的订阅。如果跳过了创建管理员，在项目目录补执行：
 
 ```bash
 docker compose exec app pnpm admin create
 ```
 
-忘记密码时，无需邮箱，登录服务器后执行：
+### 4. 检查运行状态
+
+下面的命令都在项目目录执行：
 
 ```bash
-docker compose exec app pnpm admin reset
+cd /opt/oxygen
+docker compose ps
+docker compose logs --tail=100 app caddy
 ```
 
-重置后重新登录。不要把真实密码写进脚本、环境变量示例、聊天记录或 shell 参数。
+正常情况下 `app`、`db`、`caddy` 都处于运行状态，`app` 和 `db` 显示 healthy。首次启动可能需要多等一会儿。三个服务都配置了自动重启，服务器重启后会随 Docker 启动。
 
-升级应用前先备份，然后上传新源码（保留现有 `.env` 与 Docker 数据卷）并运行：
+## API 和外部服务
+
+日常使用**不需要任何第三方 API Key**。订阅信息手动录入，头像在本地生成，内置图标随源码提供，数据库运行在自己的服务器上。
+
+需要联网的地方有两处：安装和更新时下载源码、依赖及镜像；Caddy 申请和续期证书时访问证书机构。这些都不用申请 API Key，也不用提供 DNS 服务商的令牌。
+
+续费提醒显示在站内，需要打开网站查看。也可以导出 ICS 文件导入自己的日历，但它不会自动更新。目前没有邮件、短信或浏览器推送，也不会连接订阅平台同步账单或自动扣费。
+
+## 更新
+
+在原来的项目目录执行。先备份，再拉取代码并重新构建：
 
 ```bash
+cd /opt/oxygen
 bash scripts/backup.sh
-docker compose pull
+git pull --ff-only
+docker compose pull db caddy
 docker compose up -d --build --wait --wait-timeout 240
 ```
 
-应用启动时执行幂等数据库迁移。PostgreSQL 的大版本升级需要单独安排导出/导入，不能直接将已有 17 数据卷挂载到 18 容器。不要执行 `docker compose down -v`，`-v` 会删除持久化数据卷。
+保留原有 `.env` 和 Docker 数据卷。应用启动时会执行数据库迁移，不需要重新创建账号。已有部署继续使用原目录即可，仓库改名不要求搬动文件或修改 Compose 项目名。
+
+如果按后文移除了 Caddy 服务，将更新命令中的 `docker compose pull db caddy` 改为 `docker compose pull db`。
+
+不要运行 `docker compose down -v`，它会删除数据卷。数据库当前使用 PostgreSQL 17，升级应用时不要自行修改数据库镜像的大版本号。
 
 ## 备份与恢复
 
-设置页的 JSON 导出用于业务数据迁移与恢复，不包含密码哈希、会话或部署密钥；包括业务记录引用的自定义图片。网页导出上限为 49 MiB、导入请求上限为 50 MiB，图片原始数据合计上限 32 MiB；超过限制时请使用下面的服务器备份脚本。CSV 用于表格查看订阅，不是完整恢复文件。
-
-服务器备份覆盖**PostgreSQL 全库与上传图片**：
+### 服务器备份
 
 ```bash
+cd /opt/oxygen
 bash scripts/backup.sh
 ```
 
-脚本短暂停止应用写入，输出 `backups/时间戳-随机数/`，包含数据库、图片归档、版本清单与 SHA-256 校验值；失败也会尝试恢复原有应用运行状态。请将整个备份目录复制到另一台设备，并将 `.env` 另外安全保存。服务器全库备份含管理员密码哈希及其他私密数据，不要上传公开仓库。
+备份时网站会短暂停止服务，完成后恢复运行。文件保存在 `backups/时间戳-随机数/`，包含数据库、上传图片和校验文件。
 
-恢复已存在于本项目 `backups/` 的备份：
+把整个备份目录复制到另一台设备，并单独保存 `.env`。服务器备份包含账号信息和私人数据，不要放进公开仓库。
+
+恢复时，把备份目录放回本项目的 `backups/` 下，然后执行：
 
 ```bash
 bash scripts/restore.sh 20260905T120000Z-12345
 ```
 
-换成实际目录名。脚本先校验，再要求输入 `RESTORE`；确认后自动创建恢复前安全备份，覆盖数据库与图片，清空恢复后的会话，要求重新登录。恢复失败时保留应用停止状态，避免写入不完整数据。不要恢复来源不可信的数据库备份。
+把示例名称换成实际目录名。脚本会校验文件，要求输入 `RESTORE`，再备份当前数据并执行覆盖。恢复完成后需要重新登录。若恢复失败，应用会保持停止，请根据报错修复后重试。
 
-建议定期执行备份，并实际做一次恢复演练。Caddy 证书使用独立持久化卷，服务器迁移可让 Caddy 重新签发；频繁重建证书可能触发证书机构限流。
+### 网页导出
+
+设置页可以导出和恢复 JSON，包含业务数据及使用中的自定义图片，不包含账号密码和会话。CSV 适合用表格查看订阅，不能用来完整恢复网站。
+
+网页导出上限为 49 MiB、导入上限为 50 MiB，图片原始数据合计上限为 32 MiB。数据量超过限制时使用服务器备份。
+
+## 忘记密码
+
+登录服务器，在项目目录执行：
+
+```bash
+docker compose exec app pnpm admin reset
+```
+
+按提示输入新密码。重置后所有已登录设备都需要重新登录，不需要邮箱或短信验证。
+
+## 已有反向代理
+
+如果服务器已经用 Nginx 或 Caddy 管理网站，可以编辑 `compose.yaml`，移除其中的整个 `caddy` 服务，并在 `app` 服务下添加端口映射。下面的方式适用于直接运行在宿主机上的反向代理：
+
+```yaml
+    ports:
+      - "127.0.0.1:3000:3000"
+```
+
+让现有反向代理转发到 `127.0.0.1:3000`，由它配置域名和 HTTPS。`.env` 中的 `DOMAIN` 填这个域名，Compose 会据此设置 `APP_URL`。
+
+如果反向代理也运行在 Docker 容器里，需要把它与应用接入同一个 Docker 网络，再通过应用的服务名访问；不要填写代理容器自己的 `127.0.0.1`。
+
+代理需要正确设置 `X-Forwarded-Proto`，并覆盖客户端传入的 `X-Forwarded-For`。不要缓存本站页面或 API。应用端口 3000 只监听回环地址，数据库端口 5432 不对公网开放。
+
+## 常见问题
+
+### 域名打不开或证书申请失败
+
+检查 A 记录是否指向当前服务器、是否有错误的 AAAA 记录、安全组和防火墙是否允许 80/443，以及端口是否被其他程序占用。Caddy 日志可以单独查看：
+
+```bash
+docker compose logs --tail=100 caddy
+```
+
+### 登录后又回到登录页
+
+通过 HTTPS 域名访问，不要用服务器 IP 的 HTTP 地址。确认 `.env` 中的 `DOMAIN` 与浏览器访问的域名一致；修改后运行 `docker compose up -d`。
+
+### 修改数据库密码后启动失败
+
+`.env` 里的数据库密码只在首次初始化数据库时生效，直接修改这个值不会同时更改已有数据库的密码。如果只是误改，恢复原值再启动即可。
+
+### 构建被 killed，或下载一直失败
+
+构建被终止时先检查内存和磁盘空间，内存不足可以升级服务器配置，或在同架构的另一台机器上构建镜像。下载失败则检查服务器到 GitHub、Docker 镜像源和 npm 的网络连接。
+
+## 使用说明
+
+- 月度预计支出按当月计划账期计算，年付订阅在扣费月计入全年金额；月均折算单独显示。
+- 不同币种分别统计，不做自动汇率换算。
+- 订阅付款和成员交费都需要手动确认，日期到了不会自动标记为已支付。
+- 家庭套餐总费用只计算一次，成员退出会释放未来席位，已经生成的账期保留分摊记录。
+- 修改计费日期或周期时，旧账期保留，新规则最早从明天生效。暂不支持按天折算。
+- 家庭组成员是管理用的档案，没有独立登录账号。网站目前只支持一个管理员。
 
 ## 本地开发
 
-推荐 Node.js 24 LTS、pnpm 11.19.0，实际依赖已锁定在 `pnpm-lock.yaml`。开发可使用本地 PGlite 文件数据库以减少安装步骤；生产 Compose 使用 PostgreSQL 17。
+使用 Node.js 24 和 pnpm 11.19.0。开发环境可以使用 PGlite 文件数据库，不用单独安装 PostgreSQL。
 
-创建 `.env.local`：
+```bash
+npm install -g pnpm@11.19.0
+pnpm install --frozen-lockfile
+```
+
+在项目根目录创建 `.env.local`：
 
 ```dotenv
 APP_URL=http://localhost:3000
@@ -107,54 +220,21 @@ PGLITE_DATA_DIR=./data/dev-db
 UPLOAD_DIR=./data/uploads
 ```
 
-然后运行：
+然后初始化数据库和账号，再启动开发服务器：
 
 ```bash
-pnpm install --frozen-lockfile
 pnpm migrate
 pnpm admin create
 pnpm dev
 ```
 
-打开 `http://localhost:3000`。若选择本地 PostgreSQL，配置 `DATABASE_URL` 替代 PGlite。开发数据库、图片目录、`.env*` 均不得提交。PGlite 只能由单一进程打开，所以必须先创建管理员再启动开发服务器；执行本地管理员重置、迁移或其他数据库维护命令前，先停止 `pnpm dev`。生产 PostgreSQL 不受此限制，可以在网站运行时执行管理员命令。
+打开 `http://localhost:3000`。PGlite 同一时间只能由一个进程打开，执行密码重置或数据库维护命令前，先停止开发服务器。生产环境的 PostgreSQL 没有这个限制。
 
 ```bash
 pnpm test
 pnpm build
 ```
 
-浏览器验收可运行 `pnpm test:e2e`。首次先运行 `pnpm exec playwright install chromium`；也可设置 `CHROME_PATH` 使用已安装的 Chrome。测试仅在 `test-results/e2e-database` 创建隔离数据库和测试账号，通过端口 3100 启动测试网站，不会往正式数据库写入示例数据。
+浏览器测试使用 `pnpm test:e2e`，首次运行前执行 `pnpm exec playwright install chromium`。测试使用端口 3100 和隔离数据库。
 
-`pnpm build` 使用 `next build --webpack`。正式开发与部署验证结果以交付的测试记录为准；能构建源码不等于已在真实域名签发证书。
-
-## 已有反向代理
-
-默认 Compose 的 Caddy 占用主机 80/443。如果已有 Nginx/Caddy，可以移除 `caddy` 服务，在 `app` 中添加仅回环监听的 `ports: ["127.0.0.1:3000:3000"]`，让现有反向代理转发至该端口并负责 HTTPS。
-
-保持 `APP_URL=https://你的域名`，将 `X-Forwarded-Proto` 设置为 HTTPS，并覆盖客户端传入的 `X-Forwarded-For`，不要把应用 3000 或数据库 5432 直接开放到公网。反向代理不要缓存私人页面或 API。若有 CDN，关闭该站点的 HTML/API 缓存。
-
-## 数据口径与当前边界
-
-- 月度预计支出按当月实际计划账期汇总；年付仅在扣费月计入全年金额。月均折算有独立标识。
-- 金额使用币种最小单位整数；CNY/USD 两位、JPY/KRW 零位、KWD 三位，按币种分别展示。
-- 订阅付款与家庭成员交费分别手动确认；日期到达不会自动标为已支付。家庭套餐总支出只计一次。
-- 成员退出释放未来席位，已生成账期的分摊保存快照。第一版不自动处理按天折算。
-- 编辑日期或计费周期时，先冻结截至今天的旧账期，新规则最早从明日生效。暂停后恢复可以明确指定今天或之后的首次扣费日。
-- 已生成账期的付款和成员交费可手动调整；成员金额改变后，相关交费状态会回到待确认。历史账期不会因修改当前成员档案而自动改名或换头像。
-- 核心字段存储在有归属校验的 PostgreSQL 实体表中，业务字段使用 JSONB；每次修改持有管理员行锁并校验版本，适合私人站点规模。没有离线编辑或实时 WebSocket 推送。
-- 修改后其他设备重新读取同一份服务端数据；没有实时推送通知。
-- 家庭组成员档案不是网站账号；第一版只有一个网站管理员。
-- 20 项服务目录中 17 项提供真实本地品牌资源；Microsoft 365、百度网盘、阿里云盘为明确的文字占位，可上传图片覆盖。详细来源与限制见 [ATTRIBUTIONS.md](ATTRIBUTIONS.md)。
-- 依赖核对与兼容依据见 [DEPENDENCIES.md](DEPENDENCIES.md)。
-
-## 常见问题
-
-**HTTPS 还没有成功？** 检查域名解析、是否有错误 AAAA 记录、80/443 安全组、防火墙以及其他程序占用端口，再查看 Caddy 日志。普通公网域名流程不需要向 DNS 服务商申请 API Key。
-
-**登录总是回到登录页？** 生产只通过 HTTPS 域名访问；`APP_URL` 必须与浏览器地址完全一致。生产 Cookie 带 `Secure`，不能用服务器 IP 的 HTTP 地址测试。
-
-**修改 `.env` 的数据库密码后连不上？** PostgreSQL 初始化变量只在首次建立空数据卷时生效。不要随意修改已部署密码；应先在数据库内执行受控的密码变更，再同步 `.env`。
-
-**构建退出或被 killed？** 优先检查服务器内存和磁盘。小内存服务器可在另一台机器构建同架构镜像后上传，或增加可用内存。
-
-**镜像或 npm 包下载失败？** 检查服务器出站网络。可配置自己信任的 Docker/npm 镜像源；本项目没有偷偷替换下载源。
+测试记录见 [TESTING.md](TESTING.md)，依赖说明见 [DEPENDENCIES.md](DEPENDENCIES.md)，品牌图标来源见 [ATTRIBUTIONS.md](ATTRIBUTIONS.md)。
