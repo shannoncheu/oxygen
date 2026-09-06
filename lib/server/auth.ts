@@ -181,7 +181,9 @@ export function setSessionCookie(response: NextResponse, token: string, maxAge: 
   response.cookies.set(SESSION_COOKIE, token, {
     httpOnly: true,
     secure: process.env.NODE_ENV === 'production',
-    sameSite: 'strict',
+    // Keep the session on top-level links opened from another site. Mutations
+    // still require the matching Origin and X-Requested-With headers.
+    sameSite: 'lax',
     path: '/',
     maxAge,
   });

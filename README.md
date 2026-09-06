@@ -251,7 +251,17 @@ Nginx 部署查看 `sudo journalctl -u nginx -n 60 --no-pager`，以及 `docker 
 
 ### 登录后又回到登录页
 
-通过 HTTPS 域名访问，不要用服务器 IP 的 HTTP 地址。确认 `.env` 中的 `DOMAIN` 与浏览器访问的域名一致；修改后运行 `docker compose up -d`。
+通过 HTTPS 域名访问，确认 `.env` 中的 `DOMAIN` 与浏览器访问的域名一致。勾选「保持登录 30 天」后，会话从本次登录起有效 30 天；未勾选为 12 小时。退出登录、清除网站数据，或管理员撤销会话后，需要重新登录。
+
+旧版登录页不会检查已有会话，从收藏或历史记录打开 `/login` 时仍会显示表单。新版会自动返回首页，也调整了外部链接进入时的 Cookie 策略。更新并重新构建后，退出再登录一次，让浏览器保存新的 Cookie。
+
+使用主机 Nginx 的部署运行：
+
+```bash
+cd /opt/oxygen && git pull --ff-only && docker compose -f compose.nginx.yaml up -d --build --wait --wait-timeout 240
+```
+
+如果仍掉登录，在同一浏览器直接打开本站的 `/api/account`：返回账号说明会话仍有效，返回「请先登录」说明服务器没有识别到有效会话。排查时只需说明是哪一种结果，不要提供密码或 Cookie。反向代理和 CDN 都不应缓存页面或 API。
 
 ### 上传头像后提示服务器错误
 
@@ -348,5 +358,12 @@ pnpm build
 ```
 
 浏览器测试使用 `pnpm test:e2e`，首次运行前执行 `pnpm exec playwright install chromium`。测试使用端口 3100 和隔离数据库。
+
+登录保持另有 WebKit 回归，可验证手机视口下刷新、打开登录页或外部链接、关闭并重新打开浏览器后的会话：
+
+```bash
+pnpm exec playwright install webkit
+E2E_BROWSER=webkit pnpm test:e2e e2e/session-persistence.spec.ts
+```
 
 测试记录见 [TESTING.md](TESTING.md)，依赖说明见 [DEPENDENCIES.md](DEPENDENCIES.md)，品牌图标来源见 [ATTRIBUTIONS.md](ATTRIBUTIONS.md)。

@@ -90,12 +90,25 @@ test('authentication, durable shared data, optimistic revisions, uploads and com
   await assertStatus(firstLogin, 200);
   const desktop = cookie(firstLogin);
   assert.match(firstLogin.headers.get('set-cookie')!, /HttpOnly/i);
-  assert.match(firstLogin.headers.get('set-cookie')!, /SameSite=strict/i);
+  assert.match(firstLogin.headers.get('set-cookie')!, /SameSite=lax/i);
+  assert.match(firstLogin.headers.get('set-cookie')!, /Max-Age=2592000(?:;|$)/i);
+  assert.match(firstLogin.headers.get('set-cookie')!, /Expires=/i);
   const secondLogin = await login(
     request('/api/auth/login', { username: 'tester', password: 'a-test-only-password' }),
   );
   await assertStatus(secondLogin, 200);
   const mobile = cookie(secondLogin);
+  assert.match(secondLogin.headers.get('set-cookie')!, /Max-Age=43200(?:;|$)/i);
+  const lifetimes = await query(
+    'SELECT EXTRACT(EPOCH FROM (expires_at-now())) AS seconds FROM sessions ORDER BY expires_at',
+  );
+  assert.equal(lifetimes.rows.length, 2);
+  assert.ok(
+    Number(lifetimes.rows[0].seconds) > 43100 && Number(lifetimes.rows[0].seconds) <= 43200,
+  );
+  assert.ok(
+    Number(lifetimes.rows[1].seconds) > 2591900 && Number(lifetimes.rows[1].seconds) <= 2592000,
+  );
   let data = (await (await getData(request('/api/data', undefined, desktop))).json()).data;
   const day = addDays(todayInTimezone('Asia/Shanghai'), 1);
   const saved = await action(

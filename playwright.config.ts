@@ -1,6 +1,7 @@
 import { defineConfig } from '@playwright/test';
 import path from 'node:path';
 const dir = path.join(process.cwd(), 'test-results', 'e2e-database');
+const browserName = process.env.E2E_BROWSER === 'webkit' ? 'webkit' : 'chromium';
 export default defineConfig({
   testDir: './e2e',
   fullyParallel: false,
@@ -9,11 +10,15 @@ export default defineConfig({
   reporter: 'list',
   globalSetup: './e2e/setup.ts',
   use: {
+    browserName,
     baseURL: 'http://localhost:3100',
     contextOptions: { reducedMotion: 'reduce' },
     actionTimeout: 15000,
     headless: true,
-    launchOptions: process.env.CHROME_PATH ? { executablePath: process.env.CHROME_PATH } : {},
+    launchOptions:
+      browserName === 'chromium' && process.env.CHROME_PATH
+        ? { executablePath: process.env.CHROME_PATH }
+        : {},
   },
   webServer: {
     command: 'node node_modules/next/dist/bin/next dev --webpack -p 3100',
